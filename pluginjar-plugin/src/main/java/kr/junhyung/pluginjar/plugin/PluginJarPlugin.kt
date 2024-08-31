@@ -4,7 +4,7 @@ import kr.junhyung.pluginjar.core.PluginMainClassResolver
 import kr.junhyung.pluginjar.core.PluginMeta
 import kr.junhyung.pluginjar.core.PluginMetaSerializer
 import kr.junhyung.pluginjar.plugin.service.PluginMetaService
-import kr.junhyung.pluginjar.plugin.service.YamlPluginMetaService
+import kr.junhyung.pluginjar.plugin.service.SerializedPluginMetaService
 import kr.junhyung.pluginjar.plugin.tasks.PluginJar
 import kr.junhyung.pluginjar.plugin.tasks.ProcessPluginResources
 import org.gradle.api.Plugin
@@ -13,21 +13,31 @@ import java.util.*
 
 @Suppress("unused")
 class PluginJarPlugin : Plugin<Project> {
+
+    companion object {
+        const val PLUGIN_JAR_TASK_NAME = "pluginJar"
+        const val PLUGIN_META_EXTENSION_NAME = "pluginMeta"
+        const val PROCESS_PLUGIN_RESOURCES_TASK_NAME = "processPluginResources"
+
+        const val OUTPUT_DIRECTORY = "generated/pluginJar"
+        const val PLUGIN_META_FILE_NAME = "plugin.yml"
+    }
+
     override fun apply(project: Project) {
         addPluginJarAnnotationsModule(project)
 
-        project.extensions.add("pluginJar", PluginMeta())
+        project.extensions.add(PLUGIN_META_EXTENSION_NAME, PluginMeta())
         configureTasks(project)
     }
 
     private fun configureTasks(project: Project) {
         registerPluginMetaService(project)
-        val outputDirectory = project.layout.buildDirectory.dir("generated/plugin-jar").get()
-        val resourceTask = project.tasks.register("processPluginResources", ProcessPluginResources::class.java) {
+        val outputDirectory = project.layout.buildDirectory.dir(OUTPUT_DIRECTORY).get()
+        val resourceTask = project.tasks.register(PROCESS_PLUGIN_RESOURCES_TASK_NAME, ProcessPluginResources::class.java) {
             dependsOn("classes")
             this.outputDirectory.set(outputDirectory)
         }
-        project.tasks.register("pluginJar", PluginJar::class.java) {
+        project.tasks.register(PLUGIN_JAR_TASK_NAME, PluginJar::class.java) {
             dependsOn(resourceTask)
             from(outputDirectory)
         }
@@ -35,7 +45,7 @@ class PluginJarPlugin : Plugin<Project> {
 
     private fun registerPluginMetaService(project: Project) {
         val source = ProjectPluginMetaPropertySource(project, getPluginMainClassResolver())
-        val service = YamlPluginMetaService(getPluginMetaSerializer(), source)
+        val service = SerializedPluginMetaService(getPluginMetaSerializer(), source)
         project.extensions.add(PluginMetaService::class.java, "pluginMetaService", service)
     }
 

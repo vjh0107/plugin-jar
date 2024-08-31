@@ -5,7 +5,7 @@ import kr.junhyung.pluginjar.core.PluginMetaSerializer
 import kr.junhyung.pluginjar.plugin.PluginMetaPropertySource
 import java.io.File
 
-class YamlPluginMetaService(
+class SerializedPluginMetaService(
     private val pluginMetaSerializer: PluginMetaSerializer,
     private val pluginMetaPropertySource: PluginMetaPropertySource
 ) : PluginMetaService {
