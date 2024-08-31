@@ -3,7 +3,7 @@
 PluginJar is a Gradle plugin designed to simplify the creation of plugin.yml files for Minecraft plugins.
 
 By using this plugin, there is no need to use ShadowJar to merge projects in a Gradle multi-project environment.
-This plugin is specifically designed to prevent the creation of fatjars in Minecraft plugin development.
+This plugin is specifically designed to avoid the creation of fatjars in Minecraft plugin development.
 
 ## Getting Started
 
