@@ -27,3 +27,7 @@ plugins {
 | api-version | Automatically determined from Bukkit API implementation dependency in the compileClasspath.    |
 | description | Project description.  |
 | libraries | Dependencies collected from the runtimeClasspath. If the project depends on other projects at runtime, their dependencies are also included. |
+
+## License
+
+Licensed under the Apache License, Version 2.0
