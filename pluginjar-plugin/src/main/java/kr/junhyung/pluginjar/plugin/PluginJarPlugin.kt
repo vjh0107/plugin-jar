@@ -50,7 +50,7 @@ class PluginJarPlugin : Plugin<Project> {
     }
 
     private fun addPluginJarAnnotationsModule(project: Project) {
-        val apiModule = PluginJarAnnotationsModule(project.logger, project.dependencies)
+        val apiModule = PluginJarAnnotationModule(project.logger, project.dependencies)
         apiModule.addToCompileClasspath(project)
     }
 
