@@ -1,5 +1,6 @@
 plugins {
     id("pluginjar.auto-service")
+    id("pluginjar.publish")
 }
 
 dependencies {
