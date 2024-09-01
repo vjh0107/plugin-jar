@@ -1,6 +1,6 @@
 package kr.junhyung.pluginjar.asm
 
-import kr.junhyung.pluginjar.annotations.Plugin
+import kr.junhyung.pluginjar.annotation.Plugin
 import org.springframework.asm.AnnotationVisitor
 import org.springframework.asm.ClassVisitor
 import org.springframework.asm.Opcodes

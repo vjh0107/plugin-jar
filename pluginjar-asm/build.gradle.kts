@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.pluginjar.pluginjarAnnotations)
+    implementation(projects.pluginjar.pluginjarAnnotation)
     implementation(projects.pluginjar.pluginjarCore)
 
     implementation(libs.spring.core)

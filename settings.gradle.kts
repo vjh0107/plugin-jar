@@ -1,6 +1,6 @@
 include("pluginjar-plugin")
 include("pluginjar-asm")
-include("pluginjar-annotations")
+include("pluginjar-annotation")
 include("pluginjar-core")
 include("pluginjar-yaml")
 

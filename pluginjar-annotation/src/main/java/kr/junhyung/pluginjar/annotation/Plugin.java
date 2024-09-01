@@ -1,4 +1,4 @@
-package kr.junhyung.pluginjar.annotations;
+package kr.junhyung.pluginjar.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
