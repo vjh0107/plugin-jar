@@ -7,11 +7,23 @@ This plugin is specifically designed to avoid the creation of fatjars in Minecra
 
 ## Getting Started
 
+1. Add the following to your `build.gradle.kts` file.
 ```kotlin
 plugins {
     id("kr.junhyung.pluginjar") version "1.0.0"
 }
 ```
+2. Annotate your main plugin class with @Plugin annotation.
+```java
+@Plugin
+public class ExamplePlugin extends JavaPlugin() {
+    @Override
+    public void onEnable() {
+        System.out.println("Hello, PluginJar!")
+    }
+}
+```
+3. Build your project by running the following task.
 
 ```
  ./gradlew pluginJar
