@@ -7,15 +7,11 @@ include("pluginjar-yaml")
 includeBuild("build-logic")
 
 pluginManagement {
-    plugins {
-        kotlin("jvm") version embeddedKotlinVersion apply false
-        kotlin("kapt") version embeddedKotlinVersion apply false
-    }
-
     repositories {
         maven("https://junhyung.nexus/")
     }
 }
+
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
