@@ -6,38 +6,19 @@ plugins {
 }
 
 subprojects {
-    group = "kr.junhyung"
-    version = "1.0.0"
+    group = property("project.group").toString()
+    version = property("project.version").toString()
 
-    apply<JavaPlugin>()
-    apply<MavenPublishPlugin>()
-    pluginManager.apply(rootProject.libs.plugins.kotlin.jvm.get().pluginId)
+    with(pluginManager) {
+        apply<JavaPlugin>()
+        apply(rootProject.libs.plugins.kotlin.jvm.get().pluginId)
+    }
 
     java {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    configure<PublishingExtension> {
-        publications {
-            create<MavenPublication>("mavenJava") {
-                group = project.group
-                artifactId = project.name
-                version = project.version.toString()
-
-                from(components["java"])
-            }
-        }
-
-        repositories {
-            maven("https://nexus.junhyung.kr/repository/maven-releases/") {
-                credentials {
-                    username = System.getenv("NEXUS_USERNAME")
-                    password = System.getenv("NEXUS_PASSWORD")
-                }
-            }
-        }
-    }
     tasks.withType<Jar> {
         manifest {
             attributes(
