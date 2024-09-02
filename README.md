@@ -43,6 +43,14 @@ public class ExamplePlugin extends JavaPlugin {
 | description | Project description.  |
 | libraries | Dependencies collected from the runtimeClasspath. If the project depends on other projects at runtime, their dependencies are also included. |
 
+## Manual declaration
+There are some properties in `plugin.yml` that you need or want to manually declare. You can declare properties like this:
+```kotlin
+pluginJar {
+    depend = listOf("Vault", "ProtocolLib")
+    softDepend = listOf("PlaceholderAPI")
+}
+```
 ## License
 
 Licensed under the Apache License, Version 2.0
