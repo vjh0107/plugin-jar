@@ -7,8 +7,15 @@ import kr.junhyung.pluginjar.plugin.service.PluginMetaService
 import kr.junhyung.pluginjar.plugin.service.SerializedPluginMetaService
 import kr.junhyung.pluginjar.plugin.tasks.PluginJar
 import kr.junhyung.pluginjar.plugin.tasks.ProcessPluginResources
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.util.GradleVersion
 import java.util.*
 
 @Suppress("unused")
@@ -24,6 +31,9 @@ class PluginJarPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
+        if (GradleVersion.current() < GradleVersion.version("8.3")) {
+            throw GradleException("This version of PluginJar supports Gradle 8.3+ only. Please upgrade.")
+        }
         addPluginJarAnnotationsModule(project)
 
         project.extensions.add(PLUGIN_META_EXTENSION_NAME, PluginMeta())
@@ -38,7 +48,16 @@ class PluginJarPlugin : Plugin<Project> {
             this.outputDirectory.set(outputDirectory)
         }
         project.tasks.register(PLUGIN_JAR_TASK_NAME, PluginJar::class.java) {
+            group = "build"
             dependsOn(resourceTask)
+            from(getSourceSetOutput(project))
+            project.configurations
+                .getByName("runtimeClasspath")
+                .allDependencies
+                .filterIsInstance<ProjectDependency>()
+                .forEach { projectDependency ->
+                    from(getSourceSetOutput(projectDependency.dependencyProject))
+                }
             from(outputDirectory)
         }
     }
@@ -60,5 +79,13 @@ class PluginJarPlugin : Plugin<Project> {
 
     private fun getPluginMetaSerializer(): PluginMetaSerializer {
         return ServiceLoader.load(PluginMetaSerializer::class.java).single()
+    }
+
+    private fun getSourceSetOutput(project: Project): FileCollection {
+        return project
+            .extensions
+            .getByType<SourceSetContainer>()
+            .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+            .output
     }
 }

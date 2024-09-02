@@ -12,7 +12,7 @@ This plugin is specifically designed to avoid the creation of fatjars in Minecra
 1. Add the following to your `build.gradle.kts` file.
 ```kotlin
 plugins {
-    id("kr.junhyung.pluginjar") version "0.0.3"
+    id("kr.junhyung.pluginjar") version "0.0.4"
 }
 ```
 2. Annotate your main plugin class with @Plugin annotation.

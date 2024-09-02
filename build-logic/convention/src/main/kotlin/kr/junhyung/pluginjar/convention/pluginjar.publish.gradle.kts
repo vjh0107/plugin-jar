@@ -52,7 +52,7 @@ configure<SigningExtension> {
     sign(extensions.getByType(PublishingExtension::class).publications)
 }
 
-tasks.withType(PublishToMavenRepository::class.java) {
+tasks.withType(AbstractPublishToMaven::class.java) {
     dependsOn(tasks.withType<Sign>())
 }
 
