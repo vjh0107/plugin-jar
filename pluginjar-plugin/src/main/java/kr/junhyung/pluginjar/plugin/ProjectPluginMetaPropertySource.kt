@@ -18,7 +18,7 @@ class ProjectPluginMetaPropertySource(
 
     override fun getName(): String {
         val name = findExtension()?.name
-        return name ?: project.name
+        return name ?: project.rootProject.name
     }
 
     override fun findMain(): String? {

@@ -16,7 +16,7 @@ class PluginJarPlugin : Plugin<Project> {
 
     companion object {
         const val PLUGIN_JAR_TASK_NAME = "pluginJar"
-        const val PLUGIN_META_EXTENSION_NAME = "pluginMeta"
+        const val PLUGIN_META_EXTENSION_NAME = "pluginJar"
         const val PROCESS_PLUGIN_RESOURCES_TASK_NAME = "processPluginResources"
 
         const val OUTPUT_DIRECTORY = "generated/pluginJar"
