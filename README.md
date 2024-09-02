@@ -1,6 +1,7 @@
 # PluginJar
 ![Maven Central Version](https://img.shields.io/maven-central/v/kr.junhyung/pluginjar-plugin)
 ![GitHub License](https://img.shields.io/github/license/vjh0107/plugin-jar)
+[![CI](https://github.com/vjh0107/plugin-jar/actions/workflows/gradle.yml/badge.svg?branch=main&event=push)](https://github.com/vjh0107/plugin-jar/actions/workflows/gradle.yml?query=branch:main+event:push)
 
 PluginJar is a Gradle plugin designed to simplify the creation of plugin.yml files for Minecraft plugins.
 
