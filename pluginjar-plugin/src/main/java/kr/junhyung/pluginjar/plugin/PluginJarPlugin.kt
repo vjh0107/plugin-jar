@@ -43,21 +43,18 @@ class PluginJarPlugin : Plugin<Project> {
     private fun configureTasks(project: Project) {
         registerPluginMetaService(project)
         val outputDirectory = project.layout.buildDirectory.dir(OUTPUT_DIRECTORY).get()
-        val resourceTask = project.tasks.register(PROCESS_PLUGIN_RESOURCES_TASK_NAME, ProcessPluginResources::class.java) {
-            dependsOn("classes")
-            this.outputDirectory.set(outputDirectory)
-        }
+        val resourceTask =
+            project.tasks.register(PROCESS_PLUGIN_RESOURCES_TASK_NAME, ProcessPluginResources::class.java) {
+                dependsOn("classes")
+                this.outputDirectory.set(outputDirectory)
+            }
         project.tasks.register(PLUGIN_JAR_TASK_NAME, PluginJar::class.java) {
             group = "build"
             dependsOn(resourceTask)
             from(getSourceSetOutput(project))
-            project.configurations
-                .getByName("runtimeClasspath")
-                .allDependencies
-                .filterIsInstance<ProjectDependency>()
-                .forEach { projectDependency ->
-                    from(getSourceSetOutput(projectDependency.dependencyProject))
-                }
+            getProjectDependencies(project).forEach { dependencyProject ->
+                from(getSourceSetOutput(dependencyProject))
+            }
             from(outputDirectory)
         }
     }
@@ -87,5 +84,27 @@ class PluginJarPlugin : Plugin<Project> {
             .getByType<SourceSetContainer>()
             .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
             .output
+    }
+
+    private fun getProjectDependencies(project: Project): Set<Project> {
+        val result = mutableSetOf<Project>()
+        collectProjectDependencies(project, result)
+        return result
+    }
+
+    private fun collectProjectDependencies(project: Project, state: MutableSet<Project>) {
+        project
+            .configurations
+            .getByName("runtimeClasspath")
+            .allDependencies
+            .map { dependency ->
+                when (dependency) {
+                    is ProjectDependency -> {
+                        state.add(dependency.dependencyProject)
+                        collectProjectDependencies(dependency.dependencyProject, state)
+                    }
+                    else -> return@map
+                }
+            }
     }
 }
