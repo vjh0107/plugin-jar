@@ -3,6 +3,7 @@ package kr.junhyung.pluginjar.plugin
 import kr.junhyung.pluginjar.core.PluginMainClass
 import kr.junhyung.pluginjar.core.PluginMainClassResolver
 import kr.junhyung.pluginjar.core.PluginMeta
+import kr.junhyung.pluginjar.plugin.dsl.internal.runtimeClasspath
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.ProjectDependency
@@ -63,8 +64,8 @@ class ProjectPluginMetaPropertySource(
             .getByName("compileClasspath")
             .allDependencies
         val implementation = compileClasspathDependencies.find { dependency ->
-            BukkitImplementations.values().any { implementation ->
-                implementation.group == dependency.group && implementation.artifact == dependency.name
+            BukkitDependency.values().any { implementation ->
+                implementation.group == dependency.group && implementation.name == dependency.name
             }
         } ?: return null
         val implementationVersion = implementation.version ?: return null
@@ -125,7 +126,7 @@ class ProjectPluginMetaPropertySource(
     private fun collectDependencies(project: Project, result: MutableSet<String>) {
         project
             .configurations
-            .getByName("runtimeClasspath")
+            .runtimeClasspath
             .allDependencies
             .map { dependency ->
                 when (dependency) {

@@ -2,6 +2,7 @@ plugins {
     `kotlin-dsl`
     alias(libs.plugins.gradle.publish)
     id("pluginjar.publish")
+    id("pluginjar.test")
 }
 
 dependencies {

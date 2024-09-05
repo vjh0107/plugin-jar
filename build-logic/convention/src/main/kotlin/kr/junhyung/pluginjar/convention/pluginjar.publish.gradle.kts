@@ -15,11 +15,13 @@ configure<PublishingExtension> {
     }
     repositories {
         maven {
-            name = "MavenCentral"
-            setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = System.getenv("OSSRH_USERNAME")
-                password = System.getenv("OSSRH_PASSWORD")
+            if (!isSnapshotVersion(project.version.toString())) {
+                name = "MavenCentral"
+                setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = System.getenv("OSSRH_USERNAME")
+                    password = System.getenv("OSSRH_PASSWORD")
+                }
             }
         }
     }
@@ -32,8 +34,7 @@ configure<JavaPluginExtension> {
 
 configure<SigningExtension> {
     setRequired {
-        !project.version.toString()
-            .contains("-SNAPSHOT") && gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+        !isSnapshotVersion(project.version.toString())
     }
     if (!extra.has("signing.keyId")) {
         extra["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
@@ -94,4 +95,8 @@ fun setupPom(pom: MavenPom) {
             }
         }
     }
+}
+
+fun isSnapshotVersion(version: String): Boolean {
+    return version.endsWith("-SNAPSHOT")
 }
