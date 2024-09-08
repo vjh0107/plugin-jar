@@ -6,8 +6,6 @@ import kr.junhyung.pluginjar.core.PluginMetaSerializer
 import kr.junhyung.pluginjar.plugin.dsl.internal.runtimeClasspath
 import kr.junhyung.pluginjar.plugin.service.PluginMetaService
 import kr.junhyung.pluginjar.plugin.service.SerializedPluginMetaService
-import kr.junhyung.pluginjar.plugin.tasks.PluginJar
-import kr.junhyung.pluginjar.plugin.tasks.ProcessPluginResources
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -16,6 +14,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.util.GradleVersion
 import java.util.*
@@ -54,7 +53,7 @@ class PluginJarPlugin : Plugin<Project> {
                 dependsOn("classes")
                 this.outputDirectory.set(outputDirectory)
             }
-        project.tasks.register(PLUGIN_JAR_TASK_NAME, PluginJar::class.java) {
+        project.tasks.register(PLUGIN_JAR_TASK_NAME, Jar::class.java) {
             group = "build"
             dependsOn(resourceTask)
             from(getSourceSetOutput(project))
