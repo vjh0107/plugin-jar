@@ -3,6 +3,7 @@ package kr.junhyung.pluginjar.plugin
 import kr.junhyung.pluginjar.core.PluginMainClass
 import kr.junhyung.pluginjar.core.PluginMainClassResolver
 import kr.junhyung.pluginjar.core.PluginMeta
+import kr.junhyung.pluginjar.plugin.dsl.internal.compileClasspath
 import kr.junhyung.pluginjar.plugin.dsl.internal.runtimeClasspath
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
@@ -61,7 +62,7 @@ class ProjectPluginMetaPropertySource(
         }
         val compileClasspathDependencies = project
             .configurations
-            .getByName("compileClasspath")
+            .compileClasspath
             .allDependencies
         val implementation = compileClasspathDependencies.find { dependency ->
             BukkitDependency.values().any { implementation ->
