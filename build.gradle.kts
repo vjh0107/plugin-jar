@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.LocalDateTime
 
@@ -21,18 +22,20 @@ subprojects {
     }
 
     tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            freeCompilerArgs += "-Xjsr305=strict"
-            jvmTarget = JavaVersion.VERSION_17.majorVersion
+        compilerOptions {
+            freeCompilerArgs.add("-Xjsr305=strict")
+            freeCompilerArgs.add("-Xcontext-receivers")
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
+    val developerName = property("project.developer.name")
     tasks.withType<Jar> {
         manifest {
             attributes(
                 "Implementation-Title" to rootProject.name,
                 "Implementation-Version" to project.version,
-                "Implementation-Vendor" to "Junhyung",
+                "Implementation-Vendor" to developerName,
                 "Implementation-Timestamp" to LocalDateTime.now()
             )
         }

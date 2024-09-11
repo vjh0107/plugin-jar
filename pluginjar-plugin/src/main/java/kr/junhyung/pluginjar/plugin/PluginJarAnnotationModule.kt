@@ -3,6 +3,7 @@ package kr.junhyung.pluginjar.plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.dsl.DependencyHandler
+import org.gradle.api.plugins.JavaPlugin
 import org.slf4j.Logger
 
 class PluginJarAnnotationModule(
@@ -17,7 +18,7 @@ class PluginJarAnnotationModule(
 
     fun addToCompileClasspath(project: Project) {
         val apiModule = PluginJarAnnotationModule(project.logger, project.dependencies)
-        project.dependencies.add("compileOnly", apiModule.getDependency())
+        project.dependencies.add(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME, apiModule.getDependency())
     }
 
     private fun getDependency(): Dependency {

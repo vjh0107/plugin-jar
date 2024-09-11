@@ -1,5 +1,4 @@
 apply(plugin = "maven-publish")
-apply(plugin = "signing")
 
 configure<PublishingExtension> {
     publications {
@@ -15,11 +14,13 @@ configure<PublishingExtension> {
     }
     repositories {
         maven {
-            name = "MavenCentral"
-            setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = System.getenv("OSSRH_USERNAME")
-                password = System.getenv("OSSRH_PASSWORD")
+            if (!isSnapshotVersion(project.version.toString())) {
+                name = "MavenCentral"
+                setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = System.getenv("OSSRH_USERNAME")
+                    password = System.getenv("OSSRH_PASSWORD")
+                }
             }
         }
     }
@@ -30,31 +31,30 @@ configure<JavaPluginExtension> {
     withJavadocJar()
 }
 
-configure<SigningExtension> {
-    setRequired {
-        !project.version.toString()
-            .contains("-SNAPSHOT") && gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+if (!isSnapshotVersion(project.version.toString())) {
+    apply(plugin = "signing")
+    configure<SigningExtension> {
+        if (!extra.has("signing.keyId")) {
+            extra["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
+        }
+        if (!extra.has("signing.password")) {
+            extra["signing.password"] = System.getenv("SIGNING_PASSPHRASE")
+        }
+        if (!extra.has("signing.secretKeyRingFile")) {
+            extra["signing.secretKeyRingFile"] =
+                if (System.getenv("SIGNING_SECRET_KEY_RING_FILE_ABSOLUTE") != null) {
+                    System.getenv("SIGNING_SECRET_KEY_RING_FILE_ABSOLUTE")
+                } else {
+                    System.getenv("HOME") + "/" + System.getenv("SIGNING_SECRET_KEY_RING_FILE")
+                }
+        }
+        sign(extensions.getByType(PublishingExtension::class).publications)
     }
-    if (!extra.has("signing.keyId")) {
-        extra["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
+    tasks.withType(AbstractPublishToMaven::class.java) {
+        dependsOn(tasks.withType<Sign>())
     }
-    if (!extra.has("signing.password")) {
-        extra["signing.password"] = System.getenv("SIGNING_PASSPHRASE")
-    }
-    if (!extra.has("signing.secretKeyRingFile")) {
-        extra["signing.secretKeyRingFile"] =
-            if (System.getenv("SIGNING_SECRET_KEY_RING_FILE_ABSOLUTE") != null) {
-                System.getenv("SIGNING_SECRET_KEY_RING_FILE_ABSOLUTE")
-            } else {
-                System.getenv("HOME") + "/" + System.getenv("SIGNING_SECRET_KEY_RING_FILE")
-            }
-    }
-    sign(extensions.getByType(PublishingExtension::class).publications)
 }
 
-tasks.withType(AbstractPublishToMaven::class.java) {
-    dependsOn(tasks.withType<Sign>())
-}
 
 tasks.withType(GenerateMavenPom::class.java) {
     doFirst {
@@ -94,4 +94,8 @@ fun setupPom(pom: MavenPom) {
             }
         }
     }
+}
+
+fun isSnapshotVersion(version: String): Boolean {
+    return version.endsWith("-SNAPSHOT")
 }
