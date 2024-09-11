@@ -66,7 +66,7 @@ class ProjectPluginMetaPropertySource(
             .allDependencies
         val implementation = compileClasspathDependencies.find { dependency ->
             BukkitDependency.values().any { implementation ->
-                implementation.group == dependency.group && implementation.name == dependency.name
+                implementation.module.group == dependency.group && implementation.module.name == dependency.name
             }
         } ?: return null
         val implementationVersion = implementation.version ?: return null
