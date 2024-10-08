@@ -4,8 +4,8 @@ import kr.junhyung.pluginjar.core.PluginMainClassResolver
 import kr.junhyung.pluginjar.core.PluginMeta
 import kr.junhyung.pluginjar.core.PluginMetaSerializer
 import kr.junhyung.pluginjar.plugin.dsl.internal.runtimeClasspath
-import kr.junhyung.pluginjar.plugin.service.PluginMetaService
-import kr.junhyung.pluginjar.plugin.service.SerializedPluginMetaService
+import kr.junhyung.pluginjar.core.service.PluginMetaService
+import kr.junhyung.pluginjar.core.service.SerializedPluginMetaService
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project

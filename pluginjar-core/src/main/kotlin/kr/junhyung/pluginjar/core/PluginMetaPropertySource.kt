@@ -1,6 +1,4 @@
-package kr.junhyung.pluginjar.plugin
-
-import kr.junhyung.pluginjar.core.PluginMeta
+package kr.junhyung.pluginjar.core
 
 interface PluginMetaPropertySource {
 

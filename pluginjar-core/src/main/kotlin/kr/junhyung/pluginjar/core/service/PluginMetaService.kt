@@ -1,4 +1,4 @@
-package kr.junhyung.pluginjar.plugin.service
+package kr.junhyung.pluginjar.core.service
 
 import java.io.File
 

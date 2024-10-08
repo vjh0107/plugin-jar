@@ -3,6 +3,7 @@ package kr.junhyung.pluginjar.plugin
 import kr.junhyung.pluginjar.core.PluginMainClass
 import kr.junhyung.pluginjar.core.PluginMainClassResolver
 import kr.junhyung.pluginjar.core.PluginMeta
+import kr.junhyung.pluginjar.core.PluginMetaPropertySource
 import kr.junhyung.pluginjar.plugin.dsl.internal.compileClasspath
 import kr.junhyung.pluginjar.plugin.dsl.internal.runtimeClasspath
 import org.gradle.api.Project
