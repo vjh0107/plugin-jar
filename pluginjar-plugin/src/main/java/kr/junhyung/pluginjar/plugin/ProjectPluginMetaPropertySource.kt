@@ -118,6 +118,7 @@ class ProjectPluginMetaPropertySource(
         }
         val result = mutableSetOf<String>()
         collectDependencies(project, result)
+        applyExcludeRules(result)
         return result.toList()
     }
 
@@ -140,4 +141,11 @@ class ProjectPluginMetaPropertySource(
                 }
             }
     }
+
+    private fun applyExcludeRules(result: MutableSet<String>) {
+        project.configurations.runtimeClasspath.excludeRules.forEach {
+            result.removeIf { dependency -> dependency.startsWith("${it.group}:${it.module}") }
+        }
+    }
+
 }
