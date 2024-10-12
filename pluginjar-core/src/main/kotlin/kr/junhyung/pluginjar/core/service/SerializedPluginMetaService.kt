@@ -1,8 +1,8 @@
-package kr.junhyung.pluginjar.plugin.service
+package kr.junhyung.pluginjar.core.service
 
 import kr.junhyung.pluginjar.core.PluginMeta
 import kr.junhyung.pluginjar.core.PluginMetaSerializer
-import kr.junhyung.pluginjar.plugin.PluginMetaPropertySource
+import kr.junhyung.pluginjar.core.PluginMetaPropertySource
 import java.io.File
 
 class SerializedPluginMetaService(

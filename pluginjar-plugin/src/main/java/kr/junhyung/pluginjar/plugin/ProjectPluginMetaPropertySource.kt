@@ -3,6 +3,7 @@ package kr.junhyung.pluginjar.plugin
 import kr.junhyung.pluginjar.core.PluginMainClass
 import kr.junhyung.pluginjar.core.PluginMainClassResolver
 import kr.junhyung.pluginjar.core.PluginMeta
+import kr.junhyung.pluginjar.core.PluginMetaPropertySource
 import kr.junhyung.pluginjar.plugin.dsl.internal.compileClasspath
 import kr.junhyung.pluginjar.plugin.dsl.internal.runtimeClasspath
 import org.gradle.api.Project
@@ -66,7 +67,7 @@ class ProjectPluginMetaPropertySource(
             .allDependencies
         val implementation = compileClasspathDependencies.find { dependency ->
             BukkitDependency.values().any { implementation ->
-                implementation.group == dependency.group && implementation.name == dependency.name
+                implementation.module.group == dependency.group && implementation.module.name == dependency.name
             }
         } ?: return null
         val implementationVersion = implementation.version ?: return null
@@ -117,6 +118,7 @@ class ProjectPluginMetaPropertySource(
         }
         val result = mutableSetOf<String>()
         collectDependencies(project, result)
+        applyExcludeRules(result)
         return result.toList()
     }
 
@@ -139,4 +141,11 @@ class ProjectPluginMetaPropertySource(
                 }
             }
     }
+
+    private fun applyExcludeRules(result: MutableSet<String>) {
+        project.configurations.runtimeClasspath.excludeRules.forEach {
+            result.removeIf { dependency -> dependency.startsWith("${it.group}:${it.module}") }
+        }
+    }
+
 }
