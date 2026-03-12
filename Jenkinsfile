@@ -55,7 +55,7 @@ pipeline {
                 ]) {
                     script {
                         def version = TAG_NAME.replaceFirst(/^v/, '')
-                        sh "./gradlew publish -Pversion=${version} -Pnexus.username=$NEXUS_USERNAME -Pnexus.password=$NEXUS_PASSWORD"
+                        sh './gradlew publish -Pversion=' + version + ' -Pnexus.username=$NEXUS_USERNAME -Pnexus.password=$NEXUS_PASSWORD'
                     }
                 }
             }
