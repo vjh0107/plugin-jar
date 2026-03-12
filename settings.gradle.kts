@@ -1,16 +1,20 @@
-include("pluginjar-plugin")
-include("pluginjar-asm")
-include("pluginjar-annotation")
-include("pluginjar-core")
-include("pluginjar-yaml")
-
-includeBuild("build-logic")
-
 pluginManagement {
     repositories {
         maven("https://junhyung.nexus/")
     }
 }
+includeBuild("build-logic")
+
+fun includeProject(name: String, path: String) {
+    include(name)
+    project(":$name").projectDir = file(path)
+}
+
+includeProject("plugin-jar-gradle-plugin", "gradle-plugin")
+includeProject("plugin-jar-annotations", "annotations")
+includeProject("plugin-jar-core", "core")
+includeProject("plugin-jar-paper", "paper")
+includeProject("plugin-jar-velocity", "velocity")
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
@@ -19,10 +23,6 @@ dependencyResolutionManagement {
     repositories {
         maven("https://junhyung.nexus/")
     }
-
-    versionCatalogs.create("libs")
 }
 
-rootProject.name = "pluginjar"
-
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+rootProject.name = "plugin-jar"

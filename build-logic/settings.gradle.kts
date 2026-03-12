@@ -1,21 +1,8 @@
-include(":convention")
+rootProject.name = "build-logic"
 
-pluginManagement {
-    repositories {
-        maven("https://junhyung.nexus/")
-    }
-}
-
-@Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
     repositories {
-        maven("https://junhyung.nexus/")
-    }
-    versionCatalogs {
-        create("libs") {
-            from(files("../gradle/libs.versions.toml"))
-        }
+        mavenCentral()
+        gradlePluginPortal()
     }
 }
-
-rootProject.name = "build-logic"
