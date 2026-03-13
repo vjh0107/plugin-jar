@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         GRADLE_OPTS = '-Dorg.gradle.daemon=false'
-        IS_RELEASE = "${TAG_NAME != null && TAG_NAME.startsWith('v')}"
     }
 
     stages {
@@ -53,10 +52,7 @@ pipeline {
                         passwordVariable: 'NEXUS_PASSWORD'
                     )
                 ]) {
-                    script {
-                        def version = TAG_NAME.replaceFirst(/^v/, '')
-                        sh './gradlew publish -Pversion=' + version + ' -Pnexus.username=$NEXUS_USERNAME -Pnexus.password=$NEXUS_PASSWORD'
-                    }
+                    sh './gradlew publish -Pversion=' + TAG_NAME + ' -Pnexus.username=$NEXUS_USERNAME -Pnexus.password=$NEXUS_PASSWORD'
                 }
             }
         }
