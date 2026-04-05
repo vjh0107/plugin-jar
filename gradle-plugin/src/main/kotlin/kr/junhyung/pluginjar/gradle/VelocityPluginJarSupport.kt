@@ -24,8 +24,9 @@ class VelocityPluginJarSupport : AbstractPlatformSupport(
 
     override fun isApplicable(project: Project): Boolean =
         project.configurations.getByName("compileClasspath")
-            .allDependencies
-            .any { it.group == "com.velocitypowered" && it.name == "velocity-api" }
+            .resolvedConfiguration
+            .resolvedArtifacts
+            .any { it.moduleVersion.id.group == "com.velocitypowered" && it.moduleVersion.id.name == "velocity-api" }
 
     override fun configureExtension(
         project: Project,

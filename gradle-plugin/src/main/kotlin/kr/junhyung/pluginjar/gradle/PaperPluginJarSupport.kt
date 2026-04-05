@@ -24,8 +24,9 @@ class PaperPluginJarSupport : AbstractPlatformSupport(
 
     override fun isApplicable(project: Project): Boolean =
         project.configurations.getByName("compileClasspath")
-            .allDependencies
-            .any { it.group == "io.papermc.paper" && it.name == "paper-api" }
+            .resolvedConfiguration
+            .resolvedArtifacts
+            .any { it.moduleVersion.id.group == "io.papermc.paper" && it.moduleVersion.id.name == "paper-api" }
 
     override fun configureExtension(
         project: Project,
