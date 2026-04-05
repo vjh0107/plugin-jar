@@ -22,11 +22,12 @@ class VelocityPluginJarSupport : AbstractPlatformSupport(
         project.extensions.create<VelocityPluginExtension>(EXTENSION_NAME)
     }
 
-    override fun isApplicable(project: Project): Boolean =
-        project.configurations.getByName("compileClasspath")
-            .resolvedConfiguration
-            .resolvedArtifacts
+    override fun isApplicable(project: Project): Boolean {
+        val compileClasspath = project.configurations.getByName("compileClasspath")
+        val detached = project.configurations.detachedConfiguration(*compileClasspath.allDependencies.toTypedArray())
+        return detached.resolvedConfiguration.resolvedArtifacts
             .any { it.moduleVersion.id.group == "com.velocitypowered" && it.moduleVersion.id.name == "velocity-api" }
+    }
 
     override fun configureExtension(
         project: Project,
