@@ -6,6 +6,13 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh 'git fetch --tags --force'
+            }
+        }
+
         stage('Build') {
             steps {
                 sh './gradlew clean build'
