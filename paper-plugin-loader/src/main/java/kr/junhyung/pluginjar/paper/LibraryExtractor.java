@@ -1,4 +1,4 @@
-package kr.junhyung.pluginjar.core;
+package kr.junhyung.pluginjar.paper;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -12,6 +12,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public final class LibraryExtractor {
@@ -22,10 +26,15 @@ public final class LibraryExtractor {
     private static final String TEMP_DIR_PREFIX = "pluginjar-libs-";
     private static final String CLEANUP_THREAD_NAME = "pluginjar-TempCleanup";
 
+    private static final Set<Path> CLEANUP_PATHS = ConcurrentHashMap.newKeySet();
+    private static final AtomicBoolean SHUTDOWN_HOOK_REGISTERED = new AtomicBoolean(false);
+
     private LibraryExtractor() {
     }
 
     public static List<Path> extractToTempDirectory(Path jarPath, Consumer<Path> libraryConsumer) {
+        Objects.requireNonNull(libraryConsumer, "libraryConsumer");
+
         try (FileSystem jarFs = openJarFileSystem(jarPath)) {
             Path librariesDir = jarFs.getPath(LIBRARIES_PATH);
 
@@ -34,7 +43,7 @@ public final class LibraryExtractor {
             }
 
             Path tempDir = Files.createTempDirectory(TEMP_DIR_PREFIX);
-            registerShutdownHook(tempDir);
+            registerForCleanup(tempDir);
 
             return extractLibraries(librariesDir, tempDir, libraryConsumer);
         } catch (IOException | URISyntaxException e) {
@@ -47,9 +56,18 @@ public final class LibraryExtractor {
         return FileSystems.newFileSystem(jarUri, Map.of());
     }
 
-    private static void registerShutdownHook(Path tempDir) {
-        Thread cleanupThread = new Thread(() -> deleteDirectoryRecursively(tempDir), CLEANUP_THREAD_NAME);
-        Runtime.getRuntime().addShutdownHook(cleanupThread);
+    private static void registerForCleanup(Path tempDir) {
+        CLEANUP_PATHS.add(tempDir);
+        if (SHUTDOWN_HOOK_REGISTERED.compareAndSet(false, true)) {
+            Thread cleanupThread = new Thread(LibraryExtractor::cleanupAll, CLEANUP_THREAD_NAME);
+            Runtime.getRuntime().addShutdownHook(cleanupThread);
+        }
+    }
+
+    private static void cleanupAll() {
+        for (Path dir : CLEANUP_PATHS) {
+            deleteDirectoryRecursively(dir);
+        }
     }
 
     private static void deleteDirectoryRecursively(Path directory) {
@@ -72,9 +90,7 @@ public final class LibraryExtractor {
 
         for (Path jarPath : jarFiles) {
             Path tempJar = extractToTemp(jarPath, tempDir);
-            if (libraryConsumer != null) {
-                libraryConsumer.accept(tempJar);
-            }
+            libraryConsumer.accept(tempJar);
         }
 
         return jarFiles.stream()

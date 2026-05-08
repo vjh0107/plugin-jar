@@ -12,9 +12,7 @@ fun includeProject(name: String, path: String) {
 
 includeProject("plugin-jar-gradle-plugin", "gradle-plugin")
 includeProject("plugin-jar-annotations", "annotations")
-includeProject("plugin-jar-core", "core")
-includeProject("plugin-jar-paper", "paper")
-includeProject("plugin-jar-velocity", "velocity")
+includeProject("plugin-jar-paper-plugin-loader", "paper-plugin-loader")
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {

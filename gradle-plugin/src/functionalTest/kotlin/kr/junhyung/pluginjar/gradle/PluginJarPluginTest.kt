@@ -101,12 +101,8 @@ class PluginJarPluginTest {
         val entries = jarFile.entries().toList().map { it.name }
 
         assertTrue(
-            entries.any { it.startsWith("kr/junhyung/pluginjar/core/") },
-            "Should contain plugin-jar-core classes at root"
-        )
-        assertTrue(
             entries.any { it.startsWith("kr/junhyung/pluginjar/paper/") },
-            "Should contain plugin-jar-paper classes at root"
+            "Should contain plugin-jar-paper-plugin-loader classes at root"
         )
 
         assertTrue(
@@ -118,21 +114,13 @@ class PluginJarPluginTest {
     }
 
     @Test
-    @DisplayName("Paper 프로젝트의 runtimeClasspath에 plugin-jar-paper만 포함된다")
-    fun `paper project should only have plugin-jar-paper in runtimeClasspath`() {
+    @DisplayName("runtimeClasspath에 plugin-jar-paper-plugin-loader가 포함된다")
+    fun `runtimeClasspath contains plugin-jar-paper-plugin-loader`() {
         val result = gradleRunner("dependencies", "--configuration", "runtimeClasspath").build()
 
-        val output = result.output
-        assertTrue(output.contains("plugin-jar-paper"), "Should contain plugin-jar-paper")
-        assertTrue(!output.contains("plugin-jar-velocity"), "Should NOT contain plugin-jar-velocity")
-    }
-
-    @Test
-    @DisplayName("Paper 프로젝트에는 generatePaperPluginYml만 등록되고 generateVelocityPluginJson은 등록되지 않는다")
-    fun `paper project registers only generatePaperPluginYml task`() {
-        val result = gradleRunner("tasks", "--all").build()
-
-        assertTrue(result.output.contains("generatePaperPluginYml"), "Should contain generatePaperPluginYml")
-        assertTrue(!result.output.contains("generateVelocityPluginJson"), "Should NOT contain generateVelocityPluginJson")
+        assertTrue(
+            result.output.contains("plugin-jar-paper-plugin-loader"),
+            "Should contain plugin-jar-paper-plugin-loader"
+        )
     }
 }

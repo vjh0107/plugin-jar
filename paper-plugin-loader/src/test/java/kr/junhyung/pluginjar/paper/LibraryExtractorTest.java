@@ -1,4 +1,4 @@
-package kr.junhyung.pluginjar.core;
+package kr.junhyung.pluginjar.paper;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ class LibraryExtractorTest {
     void returnsEmptyListWhenNoLibrariesDir() throws Exception {
         createEmptyJar(testJarPath);
 
-        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, null);
+        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, p -> {});
 
         assertTrue(extracted.isEmpty());
     }
@@ -53,7 +53,7 @@ class LibraryExtractorTest {
         List<String> libraryNames = List.of("lib1.jar", "lib2.jar", "lib3.jar");
         createJarWithLibraries(testJarPath, libraryNames);
 
-        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, null);
+        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, p -> {});
 
         assertEquals(3, extracted.size());
         for (Path path : extracted) {
@@ -83,7 +83,7 @@ class LibraryExtractorTest {
     void ignoresNonJarFiles() throws Exception {
         createJarWithMixedFiles(testJarPath);
 
-        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, null);
+        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, p -> {});
 
         assertEquals(1, extracted.size());
         assertTrue(extracted.getFirst().toString().endsWith(".jar"));
@@ -94,7 +94,7 @@ class LibraryExtractorTest {
     void throwsExceptionForInvalidJarPath() {
         Path nonExistentJar = tempDir.resolve("non-existent.jar");
 
-        assertThrows(IllegalStateException.class, () -> LibraryExtractor.extractToTempDirectory(nonExistentJar, null));
+        assertThrows(IllegalStateException.class, () -> LibraryExtractor.extractToTempDirectory(nonExistentJar, p -> {}));
     }
 
     private void createEmptyJar(Path jarPath) throws IOException {

@@ -3,6 +3,10 @@ plugins {
     id("pluginjar.publish")
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 gradlePlugin {
     plugins {
         register("plugin-jar") {
@@ -41,9 +45,7 @@ val publishToFunctionalTestRepository by tasks.registering {
     description = "Publishes all required modules to functional test repository"
     dependsOn(
         ":plugin-jar-annotations:publishMavenPublicationToFunctionalTestRepository",
-        ":plugin-jar-core:publishMavenPublicationToFunctionalTestRepository",
-        ":plugin-jar-paper:publishMavenPublicationToFunctionalTestRepository",
-        ":plugin-jar-velocity:publishMavenPublicationToFunctionalTestRepository"
+        ":plugin-jar-paper-plugin-loader:publishMavenPublicationToFunctionalTestRepository"
     )
 }
 
@@ -59,8 +61,7 @@ tasks.named<Test>("functionalTest") {
 
 dependencies {
     implementation(project(":plugin-jar-annotations"))
-    implementation(project(":plugin-jar-core"))
-    implementation(libs.spring.core)
+    compileOnly(project(":plugin-jar-paper-plugin-loader"))
     implementation(libs.asm)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.dataformat.yaml)

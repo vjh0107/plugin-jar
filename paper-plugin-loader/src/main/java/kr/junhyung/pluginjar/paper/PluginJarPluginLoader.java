@@ -3,7 +3,6 @@ package kr.junhyung.pluginjar.paper;
 import io.papermc.paper.plugin.loader.PluginClasspathBuilder;
 import io.papermc.paper.plugin.loader.PluginLoader;
 import io.papermc.paper.plugin.loader.library.impl.JarLibrary;
-import kr.junhyung.pluginjar.core.LibraryExtractor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
