@@ -21,7 +21,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh './gradlew :plugin-jar-core:test :plugin-jar-gradle-plugin:functionalTest'
+                sh './gradlew check'
             }
             post {
                 always {
