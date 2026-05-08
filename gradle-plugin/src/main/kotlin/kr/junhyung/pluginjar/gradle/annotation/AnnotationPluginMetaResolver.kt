@@ -2,16 +2,15 @@ package kr.junhyung.pluginjar.gradle.annotation
 
 import kr.junhyung.pluginjar.annotations.PluginMarker
 import kr.junhyung.pluginjar.gradle.PluginMeta
-import kr.junhyung.pluginjar.gradle.PluginMetaResolver
-import org.springframework.asm.AnnotationVisitor
-import org.springframework.asm.ClassReader
-import org.springframework.asm.ClassVisitor
-import org.springframework.asm.Opcodes
+import org.objectweb.asm.AnnotationVisitor
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.Opcodes
 import java.io.File
 
-class AnnotationPluginMetaResolver : PluginMetaResolver {
+object AnnotationPluginMetaResolver {
 
-    override fun resolve(classesDirs: Iterable<File>): PluginMeta? {
+    fun resolve(classesDirs: Iterable<File>): PluginMeta? {
         return classesDirs
             .asSequence()
             .filter { it.exists() && it.isDirectory }

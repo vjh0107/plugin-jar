@@ -61,6 +61,7 @@ dependencies {
     implementation(project(":plugin-jar-annotations"))
     implementation(project(":plugin-jar-core"))
     implementation(libs.spring.core)
+    implementation(libs.asm)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.dataformat.yaml)
     implementation(libs.jackson.module.kotlin)
