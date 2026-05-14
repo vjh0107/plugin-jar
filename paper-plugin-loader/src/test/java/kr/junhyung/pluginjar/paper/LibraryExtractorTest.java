@@ -12,9 +12,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,43 +38,27 @@ class LibraryExtractorTest {
     }
 
     @Test
-    @DisplayName("라이브러리 디렉토리가 없으면 빈 리스트를 반환한다")
-    void returnsEmptyListWhenNoLibrariesDir() throws Exception {
+    @DisplayName("라이브러리 디렉토리가 없으면 빈 스트림을 반환한다")
+    void returnsEmptyStreamWhenNoLibrariesDir() throws Exception {
         createEmptyJar(testJarPath);
 
-        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, p -> {});
-
-        assertTrue(extracted.isEmpty());
+        try (Stream<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath)) {
+            assertEquals(0, extracted.count());
+        }
     }
 
     @Test
     @DisplayName("라이브러리 디렉토리의 모든 JAR을 추출한다")
     void extractsAllJars() throws Exception {
-        List<String> libraryNames = List.of("lib1.jar", "lib2.jar", "lib3.jar");
-        createJarWithLibraries(testJarPath, libraryNames);
+        createJarWithLibraries(testJarPath, List.of("lib1.jar", "lib2.jar", "lib3.jar"));
 
-        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, p -> {});
-
-        assertEquals(3, extracted.size());
-        for (Path path : extracted) {
-            assertTrue(path.toString().endsWith(".jar"));
-        }
-    }
-
-    @Test
-    @DisplayName("추출된 각 라이브러리에 대해 consumer를 호출한다")
-    void invokesConsumerForEachLibrary() throws Exception {
-        List<String> libraryNames = List.of("lib1.jar", "lib2.jar");
-        createJarWithLibraries(testJarPath, libraryNames);
-
-        List<Path> consumedPaths = new ArrayList<>();
-
-        LibraryExtractor.extractToTempDirectory(testJarPath, consumedPaths::add);
-
-        assertEquals(2, consumedPaths.size());
-        for (Path path : consumedPaths) {
-            assertTrue(Files.exists(path));
-            assertTrue(path.toString().endsWith(".jar"));
+        try (Stream<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath)) {
+            List<Path> paths = extracted.toList();
+            assertEquals(3, paths.size());
+            for (Path path : paths) {
+                assertTrue(Files.exists(path), "extracted file should exist: " + path);
+                assertTrue(path.toString().endsWith(".jar"));
+            }
         }
     }
 
@@ -83,10 +67,11 @@ class LibraryExtractorTest {
     void ignoresNonJarFiles() throws Exception {
         createJarWithMixedFiles(testJarPath);
 
-        List<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath, p -> {});
-
-        assertEquals(1, extracted.size());
-        assertTrue(extracted.getFirst().toString().endsWith(".jar"));
+        try (Stream<Path> extracted = LibraryExtractor.extractToTempDirectory(testJarPath)) {
+            List<Path> paths = extracted.toList();
+            assertEquals(1, paths.size());
+            assertTrue(paths.getFirst().toString().endsWith(".jar"));
+        }
     }
 
     @Test
@@ -94,7 +79,7 @@ class LibraryExtractorTest {
     void throwsExceptionForInvalidJarPath() {
         Path nonExistentJar = tempDir.resolve("non-existent.jar");
 
-        assertThrows(IllegalStateException.class, () -> LibraryExtractor.extractToTempDirectory(nonExistentJar, p -> {}));
+        assertThrows(IllegalStateException.class, () -> LibraryExtractor.extractToTempDirectory(nonExistentJar));
     }
 
     private void createEmptyJar(Path jarPath) throws IOException {

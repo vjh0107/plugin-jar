@@ -1,5 +1,8 @@
 package kr.junhyung.pluginjar.paper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -10,19 +13,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public final class LibraryExtractor {
 
     public static final String LIBRARIES_DIR = "BOOT-INF/lib";
     public static final String LIBRARIES_PATH = "/" + LIBRARIES_DIR;
 
+    private static final Logger logger = LoggerFactory.getLogger(LibraryExtractor.class);
     private static final String TEMP_DIR_PREFIX = "pluginjar-libs-";
     private static final String CLEANUP_THREAD_NAME = "pluginjar-TempCleanup";
 
@@ -32,28 +34,60 @@ public final class LibraryExtractor {
     private LibraryExtractor() {
     }
 
-    public static List<Path> extractToTempDirectory(Path jarPath, Consumer<Path> libraryConsumer) {
-        Objects.requireNonNull(libraryConsumer, "libraryConsumer");
-
-        try (FileSystem jarFs = openJarFileSystem(jarPath)) {
-            Path librariesDir = jarFs.getPath(LIBRARIES_PATH);
-
+    public static Stream<Path> extractToTempDirectory(Path jarPath) {
+        FileSystem jarFs = openJarFileSystem(jarPath);
+        Path librariesDir;
+        try {
+            librariesDir = jarFs.getPath(LIBRARIES_PATH);
             if (!Files.exists(librariesDir)) {
-                return List.of();
+                closeQuietly(jarFs);
+                return Stream.empty();
             }
+        } catch (RuntimeException e) {
+            closeQuietly(jarFs);
+            throw e;
+        }
 
-            Path tempDir = Files.createTempDirectory(TEMP_DIR_PREFIX);
-            registerForCleanup(tempDir);
+        Path tempDir;
+        try {
+            tempDir = Files.createTempDirectory(TEMP_DIR_PREFIX);
+        } catch (IOException e) {
+            closeQuietly(jarFs);
+            throw new UncheckedIOException("Failed to create temp directory for libraries", e);
+        }
+        registerForCleanup(tempDir);
 
-            return extractLibraries(librariesDir, tempDir, libraryConsumer);
+        Stream<Path> stream;
+        try {
+            stream = Files.walk(librariesDir, 1)
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.toString().endsWith(".jar"))
+                    .map(jarEntry -> extractToTemp(jarEntry, tempDir));
+        } catch (IOException e) {
+            closeQuietly(jarFs);
+            throw new UncheckedIOException("Failed to walk " + LIBRARIES_PATH + " in " + jarPath, e);
+        }
+        return stream.onClose(() -> closeQuietly(jarFs));
+    }
+
+    private static FileSystem openJarFileSystem(Path jarPath) {
+        try {
+            URI jarUri = new URI("jar:" + jarPath.toUri());
+            return FileSystems.newFileSystem(jarUri, Map.of());
         } catch (IOException | URISyntaxException e) {
-            throw new IllegalStateException("Failed to extract libraries from " + jarPath, e);
+            throw new IllegalStateException("Failed to open jar file system for " + jarPath, e);
         }
     }
 
-    private static FileSystem openJarFileSystem(Path jarPath) throws IOException, URISyntaxException {
-        URI jarUri = new URI("jar:" + jarPath.toUri());
-        return FileSystems.newFileSystem(jarUri, Map.of());
+    private static Path extractToTemp(Path jarEntry, Path tempDir) {
+        String fileName = jarEntry.getFileName().toString();
+        Path tempJar = tempDir.resolve(fileName);
+        try {
+            Files.copy(jarEntry, tempJar, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to extract library: " + fileName, e);
+        }
+        return tempJar;
     }
 
     private static void registerForCleanup(Path tempDir) {
@@ -74,49 +108,20 @@ public final class LibraryExtractor {
         if (!Files.exists(directory)) {
             return;
         }
-
-        try (var paths = Files.walk(directory)) {
+        try (Stream<Path> paths = Files.walk(directory)) {
             for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
                 Files.deleteIfExists(path);
             }
         } catch (IOException e) {
-            // Ignore cleanup failures
+            logger.warn("Failed to clean up temporary directory {}: {}", directory, e.getMessage());
         }
     }
 
-    private static List<Path> extractLibraries(Path librariesDir, Path tempDir, Consumer<Path> libraryConsumer)
-            throws IOException {
-        List<Path> jarFiles = findJarFiles(librariesDir);
-
-        for (Path jarPath : jarFiles) {
-            Path tempJar = extractToTemp(jarPath, tempDir);
-            libraryConsumer.accept(tempJar);
-        }
-
-        return jarFiles.stream()
-                .map(p -> tempDir.resolve(p.getFileName().toString()))
-                .toList();
-    }
-
-    private static List<Path> findJarFiles(Path directory) throws IOException {
-        try (var paths = Files.walk(directory, 1)) {
-            return paths
-                    .filter(Files::isRegularFile)
-                    .filter(p -> p.toString().endsWith(".jar"))
-                    .toList();
-        }
-    }
-
-    private static Path extractToTemp(Path jarPath, Path tempDir) {
-        String fileName = jarPath.getFileName().toString();
-        Path tempJar = tempDir.resolve(fileName);
-
+    private static void closeQuietly(FileSystem fs) {
         try {
-            Files.copy(jarPath, tempJar, StandardCopyOption.REPLACE_EXISTING);
+            fs.close();
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to extract library: " + fileName, e);
+            logger.debug("Failed to close jar file system: {}", e.getMessage());
         }
-
-        return tempJar;
     }
 }

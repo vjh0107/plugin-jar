@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
     environment {
         GRADLE_OPTS = '-Dorg.gradle.daemon=false'
     }
@@ -16,12 +20,6 @@ pipeline {
         stage('Build') {
             steps {
                 sh './gradlew clean build'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh './gradlew check'
             }
             post {
                 always {
@@ -42,7 +40,7 @@ pipeline {
                         passwordVariable: 'NEXUS_PASSWORD'
                     )
                 ]) {
-                    sh './gradlew publish -Pnexus.username=$NEXUS_USERNAME -Pnexus.password=$NEXUS_PASSWORD'
+                    sh './gradlew publish -Pnexus.username="$NEXUS_USERNAME" -Pnexus.password="$NEXUS_PASSWORD"'
                 }
             }
         }
@@ -59,7 +57,9 @@ pipeline {
                         passwordVariable: 'NEXUS_PASSWORD'
                     )
                 ]) {
-                    sh './gradlew publish -Pversion=' + TAG_NAME + ' -Pnexus.username=$NEXUS_USERNAME -Pnexus.password=$NEXUS_PASSWORD'
+                    withEnv(["RELEASE_VERSION=${TAG_NAME}"]) {
+                        sh './gradlew publish -Pversion="$RELEASE_VERSION" -Pnexus.username="$NEXUS_USERNAME" -Pnexus.password="$NEXUS_PASSWORD"'
+                    }
                 }
             }
         }

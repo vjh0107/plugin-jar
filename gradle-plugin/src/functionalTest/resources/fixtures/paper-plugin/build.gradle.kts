@@ -18,6 +18,9 @@ dependencies {
 }
 
 paperPlugin {
-    name.set("TestPaperPlugin")
     author.set("TestAuthor")
+}
+
+paperPluginImage {
+    targetImage.set("test-paper-plugin:latest")
 }

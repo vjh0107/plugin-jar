@@ -5,13 +5,36 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
+    compilerOptions {
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
+    }
 }
 
 gradlePlugin {
+    website.set(providers.gradleProperty("project.url"))
+    vcsUrl.set(providers.gradleProperty("project.scm.url"))
+
     plugins {
         register("plugin-jar") {
             id = "kr.junhyung.plugin-jar"
             implementationClass = "kr.junhyung.pluginjar.gradle.PluginJarPlugin"
+            displayName = "Plugin Jar"
+            description = "Streamline your Gradle plugin JAR builds for Minecraft plugins."
+            tags = listOf("paper", "minecraft")
+        }
+        register("plugin-jar-nested") {
+            id = "kr.junhyung.plugin-jar.nested"
+            implementationClass = "kr.junhyung.pluginjar.gradle.nested.NestedPluginJarPlugin"
+            displayName = "plugin-jar (nested)"
+            description = "Paper nested plugin jar."
+            tags = listOf("paper", "nested-jar")
+        }
+        register("plugin-jar-image") {
+            id = "kr.junhyung.plugin-jar.image"
+            implementationClass = "kr.junhyung.pluginjar.gradle.image.PluginImageBuildPlugin"
+            displayName = "plugin-jar (image)"
+            description = "Paper plugin OCI image via jib."
+            tags = listOf("paper", "oci")
         }
     }
 }
@@ -19,6 +42,16 @@ gradlePlugin {
 @Suppress("UnstableApiUsage")
 testing {
     suites {
+        val test by getting(JvmTestSuite::class) {
+            useJUnitJupiter()
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-test")
+                implementation(project(":plugin-jar-paper-plugin-loader"))
+                implementation(libs.paper.api) {
+                    isTransitive = false
+                }
+            }
+        }
         register<JvmTestSuite>("functionalTest") {
             useJUnitJupiter()
             dependencies {
@@ -34,7 +67,7 @@ gradlePlugin {
 }
 
 @Suppress("UnstableApiUsage")
-tasks.check {
+tasks.named("check") {
     dependsOn(testing.suites.named("functionalTest"))
 }
 
@@ -52,9 +85,6 @@ val publishToFunctionalTestRepository by tasks.registering {
 tasks.named<Test>("functionalTest") {
     dependsOn(publishToFunctionalTestRepository)
     systemProperty("functionalTestRepositoryPath", functionalTestRepositoryDir.get().asFile.absolutePath)
-
-    // Gradle Plugin 으로 동작할 때는, Manifest의 Implementation-Vendor에서 그룹을, Implementation-Version 에서 버전을 읽어오지만,
-    // FunctionalTest 에서는 jar에 Manifest가 패키징 되지 않기 때문에 추가한다.
     systemProperty("pluginjar.version", project.version.toString())
     systemProperty("pluginjar.group", project.group.toString())
 }
@@ -66,14 +96,15 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.jackson.dataformat.yaml)
     implementation(libs.jackson.module.kotlin)
+    implementation(libs.jib.core)
 }
 
-tasks.jar {
+tasks.named<Jar>("jar") {
     manifest {
         attributes(
             "Implementation-Title" to rootProject.name,
             "Implementation-Version" to project.version,
-            "Implementation-Vendor" to project.group
+            "Implementation-Vendor" to project.group,
         )
     }
 }

@@ -2,6 +2,7 @@
 paper-api = "1.21.4-R0.1-SNAPSHOT"
 asm = "9.7.1"
 jackson = "3.1.0"
+jib = "0.28.1"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
@@ -9,3 +10,4 @@ asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-dataformat-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jib-core = { module = "com.google.cloud.tools:jib-core", version.ref = "jib" }

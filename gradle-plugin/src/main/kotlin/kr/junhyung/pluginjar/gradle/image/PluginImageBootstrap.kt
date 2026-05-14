@@ -1,0 +1,65 @@
+package kr.junhyung.pluginjar.gradle.image
+
+import kr.junhyung.pluginjar.gradle.base.PluginExtension
+import kr.junhyung.pluginjar.gradle.base.PluginRuntimeClasspath
+import kr.junhyung.pluginjar.gradle.base.ResolvePluginMarker
+import kr.junhyung.pluginjar.gradle.manifest.GeneratePaperPluginYml
+import org.gradle.api.Project
+import org.gradle.api.file.ArchiveOperations
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.register
+import javax.inject.Inject
+
+@CacheableTask
+abstract class PluginImageBootstrap : Jar() {
+
+    @get:Inject
+    abstract val archiveOperations: ArchiveOperations
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val pluginJarLibraries: ConfigurableFileCollection
+
+    init {
+        group = "plugin"
+
+        manifest.attributes(mapOf(PLUGIN_JAR_TYPE_HEADER to TYPE_IMAGE))
+
+        from(pluginJarLibraries.elements.map { entries ->
+            entries.map { archiveOperations.zipTree(it.asFile) }
+        })
+    }
+
+    companion object {
+        const val TASK_NAME = "pluginImageBootstrap"
+
+        private const val PLUGIN_JAR_TYPE_HEADER = "Plugin-Jar-Type"
+        private const val TYPE_IMAGE = "image"
+        private const val YML_TASK_NAME = "generateContainerImagePaperPluginYml"
+        private const val YML_OUTPUT_PATH = "pluginjar/container-image/paper-plugin.yml"
+        private const val PLUGIN_DIR_LOCATION = "docker-context/plugin"
+
+        internal fun register(
+            project: Project,
+            extension: PluginExtension,
+            classpath: PluginRuntimeClasspath,
+            resolveMarker: TaskProvider<ResolvePluginMarker>,
+        ): TaskProvider<PluginImageBootstrap> {
+            val yml = GeneratePaperPluginYml.register(
+                project, YML_TASK_NAME, YML_OUTPUT_PATH, extension, resolveMarker,
+            )
+            return project.tasks.register<PluginImageBootstrap>(TASK_NAME) {
+                archiveBaseName.set(extension.name.orElse(project.name))
+                destinationDirectory.set(project.layout.buildDirectory.dir(PLUGIN_DIR_LOCATION))
+                from(yml.flatMap { it.outputFile })
+                pluginJarLibraries.from(classpath.pluginJarLibraries)
+            }
+        }
+    }
+}
