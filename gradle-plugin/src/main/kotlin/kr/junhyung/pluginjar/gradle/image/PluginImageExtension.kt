@@ -4,11 +4,14 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import javax.inject.Inject
 
 abstract class PluginImageExtension @Inject constructor(layout: ProjectLayout) {
 
     abstract val targetImage: Property<String>
+
+    abstract val additionalTags: SetProperty<String>
 
     abstract val username: Property<String>
 

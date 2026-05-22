@@ -15,6 +15,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -34,6 +35,9 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
 
     @get:Input
     abstract val targetImage: Property<String>
+
+    @get:Input
+    abstract val additionalTags: SetProperty<String>
 
     @get:Input
     abstract val pluginName: Property<String>
@@ -79,6 +83,7 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         addModuleLayers(containerBuilder, payloadRoot)
 
         val containerizer = createContainerizer().apply {
+            additionalTags.get().forEach(::withAdditionalTag)
             applicationLayersCache.orNull?.asFile?.toPath()?.let { setApplicationLayersCache(it) }
             baseImageLayersCache.orNull?.asFile?.toPath()?.let { setBaseImageLayersCache(it) }
             addEventHandler(LogEvent::class.java, ::dispatchLog)
@@ -99,6 +104,7 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         modules: TaskProvider<Sync>,
     ) {
         targetImage.set(imageExtension.targetImage)
+        additionalTags.set(imageExtension.additionalTags)
         pluginName.set(bootstrap.flatMap { it.archiveBaseName })
         libsFiles.from(libs)
         moduleFiles.from(modules)
