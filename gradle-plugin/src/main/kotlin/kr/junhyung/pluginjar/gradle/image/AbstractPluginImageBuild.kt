@@ -27,6 +27,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
 import java.time.Instant
+import java.util.Optional
 
 @DisableCachingByDefault(because = "Builds and ships an image; output is not a local artifact suitable for caching")
 abstract class AbstractPluginImageBuild : DefaultTask() {
@@ -113,12 +114,23 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
     ): RegistryImage {
         val image = RegistryImage.named(ref)
         val factory = CredentialRetrieverFactory.forImage(ref, ::dispatchLog)
+
         if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
             image.addCredentialRetriever(
                 factory.known(Credential.from(username, password), "user-supplied")
             )
+            return image
         }
-        image.addCredentialRetriever(factory.dockerConfig())
+
+        val dockerConfig = factory.dockerConfig()
+        image.addCredentialRetriever {
+            try {
+                dockerConfig.retrieve()
+            } catch (e: Exception) {
+                logger.warn("Skipping docker config credentials: {}", e.message)
+                Optional.empty()
+            }
+        }
         return image
     }
 
