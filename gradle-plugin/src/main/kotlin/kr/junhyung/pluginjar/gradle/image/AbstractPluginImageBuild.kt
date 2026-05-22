@@ -26,10 +26,8 @@ import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.time.Instant
+import java.util.Optional
 
 @DisableCachingByDefault(because = "Builds and ships an image; output is not a local artifact suitable for caching")
 abstract class AbstractPluginImageBuild : DefaultTask() {
@@ -115,7 +113,7 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         password: String?,
     ): RegistryImage {
         val image = RegistryImage.named(ref)
-        val factory = CredentialRetrieverFactory.forImage(ref, ::dispatchLog, credentialHelperEnvironment())
+        val factory = CredentialRetrieverFactory.forImage(ref, ::dispatchLog)
 
         if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
             image.addCredentialRetriever(
@@ -124,20 +122,16 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
             return image
         }
 
-        image.addCredentialRetriever(factory.dockerConfig())
+        val dockerConfig = factory.dockerConfig()
+        image.addCredentialRetriever {
+            try {
+                dockerConfig.retrieve()
+            } catch (e: Exception) {
+                logger.warn("Skipping docker config credentials: {}", e.message)
+                Optional.empty()
+            }
+        }
         return image
-    }
-
-    private fun credentialHelperEnvironment(): Map<String, String> {
-        val inheritedPath = System.getenv("PATH").orEmpty()
-        val existingEntries = inheritedPath.split(File.pathSeparator).toSet()
-        val extraEntries = listOf("/opt/homebrew/bin", "/usr/local/bin")
-            .filter { it !in existingEntries && Files.isDirectory(Paths.get(it)) }
-        if (extraEntries.isEmpty()) return emptyMap()
-        val merged = (extraEntries + inheritedPath.takeIf { it.isNotEmpty() })
-            .filterNotNull()
-            .joinToString(File.pathSeparator)
-        return mapOf("PATH" to merged)
     }
 
     private fun addLibsLayer(builder: JibContainerBuilder, payloadRoot: AbsoluteUnixPath) {
