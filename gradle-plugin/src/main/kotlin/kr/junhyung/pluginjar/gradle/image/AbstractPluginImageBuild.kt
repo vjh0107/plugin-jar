@@ -141,7 +141,7 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
     }
 
     private fun addLibsLayer(builder: JibContainerBuilder, payloadRoot: AbsoluteUnixPath) {
-        val libs = libsFiles.files.filter { it.isFile && it.name.endsWith(".jar") }.sortedBy { it.name }
+        val libs = libsFiles.asFileTree.files.filter { it.isFile && it.name.endsWith(".jar") }.sortedBy { it.name }
         if (libs.isEmpty()) return
         val layer = FileEntriesLayer.builder().setName("libs")
         for (jar in libs) {
@@ -163,7 +163,7 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
     }
 
     private fun addModuleLayers(builder: JibContainerBuilder, payloadRoot: AbsoluteUnixPath) {
-        val modules = moduleFiles.files.filter { it.isFile && it.name.endsWith(".jar") }.sortedBy { it.name }
+        val modules = moduleFiles.asFileTree.files.filter { it.isFile && it.name.endsWith(".jar") }.sortedBy { it.name }
         for (jar in modules) {
             val layer = FileEntriesLayer.builder()
                 .setName("module-${jar.nameWithoutExtension}")

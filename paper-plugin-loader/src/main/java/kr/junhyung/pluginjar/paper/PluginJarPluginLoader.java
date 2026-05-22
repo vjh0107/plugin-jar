@@ -26,7 +26,7 @@ public class PluginJarPluginLoader implements PluginLoader {
     public void classloader(@NotNull PluginClasspathBuilder classpathBuilder) {
         Path pluginJar = classpathBuilder.getContext().getPluginSource();
         String type = readPluginJarType(pluginJar);
-        ClasspathResolver resolver = createResolver(type, classpathBuilder, pluginJar);
+        ClasspathResolver resolver = createResolver(type, pluginJar);
 
         try (Stream<Path> jars = resolver.resolve()) {
             jars.forEach(jar -> {
@@ -57,17 +57,10 @@ public class PluginJarPluginLoader implements PluginLoader {
         }
     }
 
-    private static ClasspathResolver createResolver(
-            String type,
-            PluginClasspathBuilder classpathBuilder,
-            Path pluginJar
-    ) {
+    private static ClasspathResolver createResolver(String type, Path pluginJar) {
         return switch (type) {
             case TYPE_NESTED -> new NestedJarClasspathResolver(pluginJar);
-            case TYPE_IMAGE -> new ContainerImageClasspathResolver(
-                    pluginJar,
-                    classpathBuilder.getContext().getConfiguration().getName()
-            );
+            case TYPE_IMAGE -> new ContainerImageClasspathResolver(pluginJar);
             default -> throw new IllegalStateException(
                     "Unsupported '" + PLUGIN_JAR_TYPE_HEADER + "': '" + type + "'. " +
                             "Expected '" + TYPE_NESTED + "' or '" + TYPE_IMAGE + "'."
