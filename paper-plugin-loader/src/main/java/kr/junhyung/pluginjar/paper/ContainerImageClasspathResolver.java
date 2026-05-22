@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
@@ -14,15 +13,17 @@ public class ContainerImageClasspathResolver implements ClasspathResolver {
     private static final String LIBS_DIR = "libs";
     private static final String MODULES_DIR = "modules";
 
+    private final Path pluginJar;
     private final String pluginName;
 
-    public ContainerImageClasspathResolver(String pluginName) {
+    public ContainerImageClasspathResolver(Path pluginJar, String pluginName) {
+        this.pluginJar = pluginJar;
         this.pluginName = pluginName;
     }
 
     @Override
     public Stream<Path> resolve() {
-        Path payloadRoot = Paths.get(pluginName + PAYLOAD_DIR_SUFFIX).toAbsolutePath();
+        Path payloadRoot = pluginJar.toAbsolutePath().getParent().resolve(pluginName + PAYLOAD_DIR_SUFFIX);
         Stream<Path> libs = streamJars(payloadRoot.resolve(LIBS_DIR), false);
         Stream<Path> modules = streamJars(payloadRoot.resolve(MODULES_DIR), true);
         return Stream.concat(libs, modules);

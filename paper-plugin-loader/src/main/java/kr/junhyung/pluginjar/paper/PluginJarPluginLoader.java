@@ -65,6 +65,7 @@ public class PluginJarPluginLoader implements PluginLoader {
         return switch (type) {
             case TYPE_NESTED -> new NestedJarClasspathResolver(pluginJar);
             case TYPE_IMAGE -> new ContainerImageClasspathResolver(
+                    pluginJar,
                     classpathBuilder.getContext().getConfiguration().getName()
             );
             default -> throw new IllegalStateException(
