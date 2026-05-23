@@ -26,6 +26,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.options.Option
 import org.gradle.work.DisableCachingByDefault
 import java.time.Instant
 import java.util.Optional
@@ -37,7 +38,8 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
     abstract val targetImage: Property<String>
 
     @get:Input
-    abstract val additionalTags: SetProperty<String>
+    @get:Option(option = "tag", description = "Tags to apply when pushing the image. Repeat to specify multiple.")
+    abstract val tags: SetProperty<String>
 
     @get:Input
     abstract val pluginName: Property<String>
@@ -83,7 +85,7 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         addModuleLayers(containerBuilder, payloadRoot)
 
         val containerizer = createContainerizer().apply {
-            additionalTags.get().forEach(::withAdditionalTag)
+            tags.get().forEach(::withAdditionalTag)
             applicationLayersCache.orNull?.asFile?.toPath()?.let { setApplicationLayersCache(it) }
             baseImageLayersCache.orNull?.asFile?.toPath()?.let { setBaseImageLayersCache(it) }
             addEventHandler(LogEvent::class.java, ::dispatchLog)
@@ -104,7 +106,7 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         modules: TaskProvider<Sync>,
     ) {
         targetImage.set(imageExtension.targetImage)
-        additionalTags.set(imageExtension.additionalTags)
+        tags.convention(imageExtension.tags)
         pluginName.set(bootstrap.flatMap { it.archiveBaseName })
         libsFiles.from(libs)
         moduleFiles.from(modules)
