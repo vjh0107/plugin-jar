@@ -25,8 +25,8 @@ public class ContainerImageClasspathResolver implements ClasspathResolver {
         Path absoluteJar = pluginJar.toAbsolutePath();
         String baseName = stripJarExtension(absoluteJar.getFileName().toString());
         Path payloadRoot = absoluteJar.getParent().resolve(baseName + PAYLOAD_DIR_SUFFIX);
-        Stream<Path> libs = streamJars(payloadRoot.resolve(LIBS_DIR), false);
-        Stream<Path> modules = streamJars(payloadRoot.resolve(MODULES_DIR), true);
+        Stream<Path> libs = streamJars(payloadRoot.resolve(LIBS_DIR));
+        Stream<Path> modules = streamJars(payloadRoot.resolve(MODULES_DIR));
         return Stream.concat(libs, modules);
     }
 
@@ -37,11 +37,8 @@ public class ContainerImageClasspathResolver implements ClasspathResolver {
         return fileName.substring(0, fileName.length() - JAR_EXTENSION.length());
     }
 
-    private static Stream<Path> streamJars(Path directory, boolean required) {
+    private static Stream<Path> streamJars(Path directory) {
         if (!Files.isDirectory(directory)) {
-            if (required) {
-                throw new IllegalStateException("Required directory is missing: " + directory);
-            }
             return Stream.empty();
         }
         try {

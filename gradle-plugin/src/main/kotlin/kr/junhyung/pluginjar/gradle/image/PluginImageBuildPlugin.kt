@@ -10,7 +10,6 @@ import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
@@ -64,11 +63,9 @@ abstract class PluginImageBuildPlugin : Plugin<Project> {
         classpath: PluginRuntimeClasspath,
     ): TaskProvider<Sync> {
         val location = project.layout.buildDirectory.dir(MODULES_LOCATION)
-        val mainJar = project.tasks.named<Jar>(JavaPlugin.JAR_TASK_NAME)
         return project.tasks.register<Sync>(COLLECT_MODULES_TASK) {
             group = "plugin"
             duplicatesStrategy = DuplicatesStrategy.FAIL
-            from(mainJar.flatMap { it.archiveFile })
             from(classpath.projectArtifacts.map { artifacts -> artifacts.map { it.file } })
             into(location)
         }

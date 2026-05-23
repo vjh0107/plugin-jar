@@ -206,25 +206,27 @@ class PluginJarPluginTest {
     }
 
     @Test
-    @DisplayName("image 모드의 main jar에는 paper-plugin.yml이 들어가지 않는다")
-    fun `module main jar does not contain paper-plugin yml`() {
-        val result = gradleRunner("pluginImageCollectModules").build()
+    @DisplayName("image bootstrap jar에 main class가 포함되고 modules에는 main jar가 들어가지 않는다")
+    fun `bootstrap jar bundles main class and modules excludes main jar`() {
+        val result = gradleRunner("pluginImageBootstrap", "pluginImageCollectModules").build()
 
-        assertEquals(TaskOutcome.SUCCESS, result.task(":pluginImageCollectModules")?.outcome)
+        assertEquals(TaskOutcome.SUCCESS, result.task(":pluginImageBootstrap")?.outcome)
 
-        val mainJar = File(testProjectDir, "build/docker-context/modules/test-paper-plugin-1.0.0.jar")
-        assertTrue(mainJar.exists(), "module jar should exist")
-
-        val jarFile = java.util.jar.JarFile(mainJar)
+        val bootstrapJar = File(testProjectDir, "build/docker-context/plugin/test-paper-plugin-1.0.0.jar")
+        val jarFile = java.util.jar.JarFile(bootstrapJar)
         try {
             val entries = jarFile.entries().toList().map { it.name }
             assertTrue(
-                entries.none { it == "paper-plugin.yml" },
-                "module main jar should not contain paper-plugin.yml (it belongs to bootstrap)",
+                entries.contains("com/example/TestPaperPlugin.class"),
+                "bootstrap jar should contain main class",
             )
         } finally {
             jarFile.close()
         }
+
+        val modulesDir = File(testProjectDir, "build/docker-context/modules")
+        val strayMainJar = File(modulesDir, "test-paper-plugin-1.0.0.jar")
+        assertTrue(!strayMainJar.exists(), "modules should not contain the main jar (it belongs to bootstrap)")
     }
 
     @Test

@@ -11,7 +11,7 @@ abstract class PluginImageExtension @Inject constructor(layout: ProjectLayout) {
 
     abstract val targetImage: Property<String>
 
-    abstract val additionalTags: SetProperty<String>
+    abstract val tags: SetProperty<String>
 
     abstract val username: Property<String>
 

@@ -7,12 +7,16 @@ import kr.junhyung.pluginjar.gradle.manifest.GeneratePaperPluginYml
 import org.gradle.api.Project
 import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import javax.inject.Inject
 
@@ -26,6 +30,10 @@ abstract class PluginImageBootstrap : Jar() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val pluginJarLibraries: ConfigurableFileCollection
 
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val mainJar: RegularFileProperty
+
     init {
         group = "plugin"
 
@@ -34,6 +42,10 @@ abstract class PluginImageBootstrap : Jar() {
         from(pluginJarLibraries.elements.map { entries ->
             entries.map { archiveOperations.zipTree(it.asFile) }
         })
+
+        from(archiveOperations.zipTree(mainJar)) {
+            exclude("META-INF/MANIFEST.MF")
+        }
     }
 
     companion object {
@@ -54,11 +66,13 @@ abstract class PluginImageBootstrap : Jar() {
             val yml = GeneratePaperPluginYml.register(
                 project, YML_TASK_NAME, YML_OUTPUT_PATH, extension, resolveMarker,
             )
+            val mainJarTask = project.tasks.named<Jar>(JavaPlugin.JAR_TASK_NAME)
             return project.tasks.register<PluginImageBootstrap>(TASK_NAME) {
                 archiveBaseName.set(extension.name.orElse(project.name))
                 destinationDirectory.set(project.layout.buildDirectory.dir(PLUGIN_DIR_LOCATION))
                 from(yml.flatMap { it.outputFile })
                 pluginJarLibraries.from(classpath.pluginJarLibraries)
+                mainJar.set(mainJarTask.flatMap { it.archiveFile })
             }
         }
     }
