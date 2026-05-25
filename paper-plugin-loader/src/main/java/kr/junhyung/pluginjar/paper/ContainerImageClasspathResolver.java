@@ -1,10 +1,11 @@
 package kr.junhyung.pluginjar.paper;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class ContainerImageClasspathResolver implements ClasspathResolver {
@@ -21,13 +22,14 @@ public class ContainerImageClasspathResolver implements ClasspathResolver {
     }
 
     @Override
-    public Stream<Path> resolve() {
+    public List<Path> resolve() throws IOException {
         Path absoluteJar = pluginJar.toAbsolutePath();
         String baseName = stripJarExtension(absoluteJar.getFileName().toString());
         Path payloadRoot = absoluteJar.getParent().resolve(baseName + PAYLOAD_DIR_SUFFIX);
-        Stream<Path> libs = streamJars(payloadRoot.resolve(LIBS_DIR));
-        Stream<Path> modules = streamJars(payloadRoot.resolve(MODULES_DIR));
-        return Stream.concat(libs, modules);
+        List<Path> result = new ArrayList<>();
+        result.addAll(listJars(payloadRoot.resolve(LIBS_DIR)));
+        result.addAll(listJars(payloadRoot.resolve(MODULES_DIR)));
+        return result;
     }
 
     private static String stripJarExtension(String fileName) {
@@ -37,17 +39,15 @@ public class ContainerImageClasspathResolver implements ClasspathResolver {
         return fileName.substring(0, fileName.length() - JAR_EXTENSION.length());
     }
 
-    private static Stream<Path> streamJars(Path directory) {
+    private static List<Path> listJars(Path directory) throws IOException {
         if (!Files.isDirectory(directory)) {
-            return Stream.empty();
+            return List.of();
         }
-        try {
-            return Files.walk(directory, 1)
-                    .filter(Files::isRegularFile)
+        try (Stream<Path> entries = Files.walk(directory, 1)) {
+            return entries.filter(Files::isRegularFile)
                     .filter(p -> p.toString().endsWith(JAR_EXTENSION))
-                    .sorted(Comparator.comparing(p -> p.getFileName().toString()));
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to enumerate " + directory, e);
+                    .sorted(Comparator.comparing(p -> p.getFileName().toString()))
+                    .toList();
         }
     }
 }

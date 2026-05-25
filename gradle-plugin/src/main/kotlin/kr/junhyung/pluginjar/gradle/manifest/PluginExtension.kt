@@ -1,4 +1,4 @@
-package kr.junhyung.pluginjar.gradle.base
+package kr.junhyung.pluginjar.gradle.manifest
 
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer

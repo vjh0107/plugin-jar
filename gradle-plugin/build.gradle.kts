@@ -22,6 +22,13 @@ gradlePlugin {
             description = "Streamline your Gradle plugin JAR builds for Minecraft plugins."
             tags = listOf("paper", "minecraft")
         }
+        register("plugin-jar-manifest") {
+            id = "kr.junhyung.plugin-jar.manifest"
+            implementationClass = "kr.junhyung.pluginjar.gradle.manifest.PaperPluginManifestPlugin"
+            displayName = "plugin-jar (manifest)"
+            description = "Paper plugin manifest (paper-plugin.yml) generation."
+            tags = listOf("paper", "manifest")
+        }
         register("plugin-jar-nested") {
             id = "kr.junhyung.plugin-jar.nested"
             implementationClass = "kr.junhyung.pluginjar.gradle.nested.NestedPluginJarPlugin"
@@ -91,7 +98,7 @@ tasks.named<Test>("functionalTest") {
 
 dependencies {
     implementation(project(":plugin-jar-annotations"))
-    compileOnly(project(":plugin-jar-paper-plugin-loader"))
+    compileOnly(project(":plugin-jar-core"))
     implementation(libs.asm)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.dataformat.yaml)

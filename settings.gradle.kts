@@ -10,6 +10,7 @@ fun includeProject(name: String, path: String) {
     project(":$name").projectDir = file(path)
 }
 
+includeProject("plugin-jar-core", "core")
 includeProject("plugin-jar-gradle-plugin", "gradle-plugin")
 includeProject("plugin-jar-annotations", "annotations")
 includeProject("plugin-jar-paper-plugin-loader", "paper-plugin-loader")

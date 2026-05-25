@@ -1,10 +1,11 @@
 package kr.junhyung.pluginjar.paper;
 
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.stream.Stream;
+import java.util.List;
 
 public interface ClasspathResolver {
 
-    Stream<Path> resolve();
+    List<Path> resolve() throws IOException;
 
 }

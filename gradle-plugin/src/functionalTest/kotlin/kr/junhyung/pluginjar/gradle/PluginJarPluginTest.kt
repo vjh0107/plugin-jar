@@ -19,6 +19,14 @@ class PluginJarPluginTest {
         get() = System.getProperty("functionalTestRepositoryPath")
             ?: error("functionalTestRepositoryPath system property is not set")
 
+    private val pluginJarVersion: String
+        get() = System.getProperty("pluginjar.version")
+            ?: error("pluginjar.version system property is not set")
+
+    private val pluginJarGroup: String
+        get() = System.getProperty("pluginjar.group")
+            ?: error("pluginjar.group system property is not set")
+
     @BeforeEach
     fun setup() {
         val fixtureDir = File(javaClass.getResource("/fixtures/paper-plugin")!!.toURI())
@@ -43,41 +51,23 @@ class PluginJarPluginTest {
         val result = gradleRunner("tasks").build()
 
         assertTrue(result.output.contains("resolvePluginMarker"))
-        assertTrue(result.output.contains("generateNestedJarPaperPluginYml"))
-        assertTrue(result.output.contains("generateContainerImagePaperPluginYml"))
+        assertTrue(result.output.contains("generatePaperPluginYml"))
         assertTrue(result.output.contains("pluginJar"))
     }
 
     @Test
-    @DisplayName("nested-jar paper-plugin.yml은 PluginJarPluginLoader를 가리킨다")
-    fun `nested jar yaml pins loader to PluginJarPluginLoader`() {
-        val result = gradleRunner("generateNestedJarPaperPluginYml").build()
+    @DisplayName("paper-plugin.yml은 PluginJarPluginLoader를 가리킨다")
+    fun `paper plugin yml pins loader to PluginJarPluginLoader`() {
+        val result = gradleRunner("generatePaperPluginYml").build()
 
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateNestedJarPaperPluginYml")?.outcome)
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePaperPluginYml")?.outcome)
 
-        val pluginYml = File(testProjectDir, "build/pluginjar/nested-jar/paper-plugin.yml")
-        assertTrue(pluginYml.exists(), "nested-jar paper-plugin.yml should exist")
+        val pluginYml = File(testProjectDir, "build/generated/pluginjar/paper-plugin.yml")
+        assertTrue(pluginYml.exists(), "paper-plugin.yml should exist")
 
         val content = pluginYml.readText()
         assertTrue(content.contains("TestPaperPlugin"), "should contain plugin name")
         assertTrue(content.contains("api-version:"), "should contain api-version")
-        assertTrue(
-            content.contains("kr.junhyung.pluginjar.paper.PluginJarPluginLoader"),
-            "loader should be PluginJarPluginLoader",
-        )
-    }
-
-    @Test
-    @DisplayName("container-image paper-plugin.yml은 PluginJarPluginLoader를 가리킨다")
-    fun `container image yaml pins loader to PluginJarPluginLoader`() {
-        val result = gradleRunner("generateContainerImagePaperPluginYml").build()
-
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateContainerImagePaperPluginYml")?.outcome)
-
-        val pluginYml = File(testProjectDir, "build/pluginjar/container-image/paper-plugin.yml")
-        assertTrue(pluginYml.exists(), "container-image paper-plugin.yml should exist")
-
-        val content = pluginYml.readText()
         assertTrue(
             content.contains("kr.junhyung.pluginjar.paper.PluginJarPluginLoader"),
             "loader should be PluginJarPluginLoader",
@@ -150,8 +140,8 @@ class PluginJarPluginTest {
     }
 
     @Test
-    @DisplayName("image bootstrap jar의 yml은 PluginJarPluginLoader를 가리키고 manifest는 image 타입이다")
-    fun `bootstrap jar pins loader and tags manifest as image`() {
+    @DisplayName("image bootstrap jar의 yml은 PluginJarPluginLoader를 가리킨다")
+    fun `bootstrap jar pins loader`() {
         val result = gradleRunner("pluginImageBootstrap").build()
 
         assertEquals(TaskOutcome.SUCCESS, result.task(":pluginImageBootstrap")?.outcome)
@@ -168,19 +158,14 @@ class PluginJarPluginTest {
                 ymlContent.contains("kr.junhyung.pluginjar.paper.PluginJarPluginLoader"),
                 "bootstrap yml should pin loader to PluginJarPluginLoader",
             )
-            assertEquals(
-                "image",
-                jarFile.manifest?.mainAttributes?.getValue("Plugin-Jar-Type"),
-                "bootstrap manifest should declare Plugin-Jar-Type=image",
-            )
         } finally {
             jarFile.close()
         }
     }
 
     @Test
-    @DisplayName("pluginJar 결과물의 yml은 PluginJarPluginLoader를 가리키고 manifest는 nested 타입이다")
-    fun `pluginJar archive pins loader and tags manifest as nested`() {
+    @DisplayName("pluginJar 결과물의 yml은 PluginJarPluginLoader를 가리킨다")
+    fun `pluginJar archive pins loader`() {
         val result = gradleRunner("pluginJar").build()
 
         assertEquals(TaskOutcome.SUCCESS, result.task(":pluginJar")?.outcome)
@@ -194,11 +179,6 @@ class PluginJarPluginTest {
             assertTrue(
                 ymlContent.contains("kr.junhyung.pluginjar.paper.PluginJarPluginLoader"),
                 "nested jar yml should pin loader to PluginJarPluginLoader",
-            )
-            assertEquals(
-                "nested",
-                jarFile.manifest?.mainAttributes?.getValue("Plugin-Jar-Type"),
-                "nested jar manifest should declare Plugin-Jar-Type=nested",
             )
         } finally {
             jarFile.close()
@@ -303,6 +283,7 @@ class PluginJarPluginTest {
             """
             plugins {
                 java
+                id("kr.junhyung.plugin-jar.manifest")
                 id("kr.junhyung.plugin-jar.image")
             }
 
@@ -318,6 +299,8 @@ class PluginJarPluginTest {
 
             dependencies {
                 compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+                compileOnly("$pluginJarGroup:plugin-jar-annotations:$pluginJarVersion")
+                runtimeOnly("$pluginJarGroup:plugin-jar-paper-plugin-loader:$pluginJarVersion")
             }
 
             paperPlugin {

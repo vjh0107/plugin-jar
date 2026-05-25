@@ -4,67 +4,46 @@ import io.papermc.paper.plugin.loader.PluginClasspathBuilder;
 import io.papermc.paper.plugin.loader.PluginLoader;
 import io.papermc.paper.plugin.loader.library.impl.JarLibrary;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
-import java.util.stream.Stream;
+import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class PluginJarPluginLoader implements PluginLoader {
 
-    private static final String PLUGIN_JAR_TYPE_HEADER = "Plugin-Jar-Type";
-    private static final String TYPE_NESTED = "nested";
-    private static final String TYPE_IMAGE = "image";
-
-    private static final Logger logger = LoggerFactory.getLogger(PluginJarPluginLoader.class);
+    private static final String JAR_EXTENSION = ".jar";
+    private static final String PAYLOAD_DIR_SUFFIX = ".d";
 
     @Override
     public void classloader(@NotNull PluginClasspathBuilder classpathBuilder) {
         Path pluginJar = classpathBuilder.getContext().getPluginSource();
-        String type = readPluginJarType(pluginJar);
-        ClasspathResolver resolver = createResolver(type, pluginJar);
+        ClasspathResolver resolver = detectResolver(pluginJar);
 
-        try (Stream<Path> jars = resolver.resolve()) {
-            jars.forEach(jar -> {
-                classpathBuilder.addLibrary(new JarLibrary(jar));
-                logger.trace("Registered library: {}", jar.getFileName());
-            });
-        }
-        logger.info("Loaded plugin libraries via {} resolver", type);
-    }
-
-    private static String readPluginJarType(Path jar) {
-        try (JarFile jarFile = new JarFile(jar.toFile())) {
-            Manifest manifest = jarFile.getManifest();
-            if (manifest == null) {
-                throw new IllegalStateException(
-                        "Plugin jar is missing META-INF/MANIFEST.MF: " + jar
-                );
-            }
-            String value = manifest.getMainAttributes().getValue(PLUGIN_JAR_TYPE_HEADER);
-            if (value == null || value.isEmpty()) {
-                throw new IllegalStateException(
-                        "Plugin jar manifest is missing '" + PLUGIN_JAR_TYPE_HEADER + "' attribute: " + jar
-                );
-            }
-            return value;
+        try {
+            List<Path> jars = resolver.resolve();
+            jars.forEach(jar -> classpathBuilder.addLibrary(new JarLibrary(jar)));
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to read manifest from " + jar, e);
+            throw new RuntimeException("Failed to resolve plugin classpath", e);
         }
     }
 
-    private static ClasspathResolver createResolver(String type, Path pluginJar) {
-        return switch (type) {
-            case TYPE_NESTED -> new NestedJarClasspathResolver(pluginJar);
-            case TYPE_IMAGE -> new ContainerImageClasspathResolver(pluginJar);
-            default -> throw new IllegalStateException(
-                    "Unsupported '" + PLUGIN_JAR_TYPE_HEADER + "': '" + type + "'. " +
-                            "Expected '" + TYPE_NESTED + "' or '" + TYPE_IMAGE + "'."
-            );
-        };
+    private static ClasspathResolver detectResolver(Path pluginJar) {
+        if (hasPayloadDirectory(pluginJar)) {
+            return new ContainerImageClasspathResolver(pluginJar);
+        }
+        return new NestedJarClasspathResolver(pluginJar);
+    }
+
+    private static boolean hasPayloadDirectory(Path pluginJar) {
+        Path absoluteJar = pluginJar.toAbsolutePath();
+        String fileName = absoluteJar.getFileName().toString();
+        if (!fileName.endsWith(JAR_EXTENSION)) {
+            return false;
+        }
+        String baseName = fileName.substring(0, fileName.length() - JAR_EXTENSION.length());
+        Path payloadDir = absoluteJar.getParent().resolve(baseName + PAYLOAD_DIR_SUFFIX);
+        return Files.isDirectory(payloadDir);
     }
 }

@@ -1,7 +1,5 @@
 package kr.junhyung.pluginjar.gradle.manifest
 
-import kr.junhyung.pluginjar.gradle.base.PluginExtension
-import kr.junhyung.pluginjar.gradle.base.ResolvePluginMarker
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
@@ -39,18 +37,18 @@ abstract class GeneratePaperPluginYml : DefaultTask() {
     }
 
     companion object {
+        const val TASK_NAME = "generatePaperPluginYml"
         private const val FALLBACK_API_VERSION = "1.21"
+        private const val OUTPUT_PATH = "generated/pluginjar/paper-plugin.yml"
         internal const val PLUGIN_LOADER = "kr.junhyung.pluginjar.paper.PluginJarPluginLoader"
 
         internal fun register(
             project: Project,
-            taskName: String,
-            outputPath: String,
             extension: PluginExtension,
             resolveMarker: TaskProvider<ResolvePluginMarker>,
         ): TaskProvider<GeneratePaperPluginYml> =
-            project.tasks.register<GeneratePaperPluginYml>(taskName) {
-                outputFile.convention(project.layout.buildDirectory.file(outputPath))
+            project.tasks.register<GeneratePaperPluginYml>(TASK_NAME) {
+                outputFile.convention(project.layout.buildDirectory.file(OUTPUT_PATH))
                 markerFile.set(resolveMarker.flatMap { it.outputFile })
                 extensionSpec.set(project.provider { PaperPluginExtensionSpec.from(extension) })
                 projectName.set(project.name)

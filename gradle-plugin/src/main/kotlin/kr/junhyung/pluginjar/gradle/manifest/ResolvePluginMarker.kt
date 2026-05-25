@@ -1,4 +1,4 @@
-package kr.junhyung.pluginjar.gradle.base
+package kr.junhyung.pluginjar.gradle.manifest
 
 import kr.junhyung.pluginjar.annotations.PluginMarker
 import org.gradle.api.DefaultTask

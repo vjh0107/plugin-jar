@@ -1,9 +1,7 @@
 package kr.junhyung.pluginjar.gradle.image
 
-import kr.junhyung.pluginjar.gradle.base.PluginExtension
-import kr.junhyung.pluginjar.gradle.base.PluginJarBasePlugin
-import kr.junhyung.pluginjar.gradle.base.PluginRuntimeClasspath
-import kr.junhyung.pluginjar.gradle.base.ResolvePluginMarker
+import kr.junhyung.pluginjar.gradle.manifest.PluginExtension
+import kr.junhyung.pluginjar.gradle.manifest.PluginRuntimeClasspath
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
@@ -12,7 +10,6 @@ import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
-import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 
@@ -26,14 +23,12 @@ abstract class PluginImageBuildPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-        project.plugins.apply(PluginJarBasePlugin::class.java)
         project.plugins.withType<JavaPlugin> {
             val pluginExtension = project.extensions.getByType<PluginExtension>()
             val imageExtension = project.extensions.create<PluginImageExtension>("paperPluginImage")
-            val resolveMarker = project.tasks.named<ResolvePluginMarker>(ResolvePluginMarker.TASK_NAME)
 
             val classpath = PluginRuntimeClasspath.of(project)
-            val bootstrap = PluginImageBootstrap.register(project, pluginExtension, classpath, resolveMarker)
+            val bootstrap = PluginImageBootstrap.register(project, pluginExtension, classpath)
             val collectLibs = registerCollectLibs(project, classpath)
             val collectModules = registerCollectModules(project, classpath)
 

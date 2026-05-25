@@ -1,4 +1,4 @@
-package kr.junhyung.pluginjar.gradle.base
+package kr.junhyung.pluginjar.gradle.manifest
 
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -26,8 +26,8 @@ internal class PluginRuntimeClasspath private constructor(configuration: Configu
 
     private fun isPluginJar(id: ComponentIdentifier): Boolean =
         id is ModuleComponentIdentifier &&
-            id.group == PluginJarBasePlugin.pluginGroup &&
-            id.module == PluginJarBasePlugin.PAPER_RUNTIME_ARTIFACT
+            id.group == PaperPluginManifestPlugin.pluginGroup &&
+            id.module == PaperPluginManifestPlugin.PAPER_RUNTIME_ARTIFACT
 
     companion object {
         private const val EXTENSION_NAME = "pluginRuntimeClasspath"

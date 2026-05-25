@@ -1,6 +1,5 @@
 package kr.junhyung.pluginjar.gradle.manifest
 
-import kr.junhyung.pluginjar.gradle.base.PluginExtension
 import java.io.Serializable
 
 internal data class PaperPluginExtensionSpec(
