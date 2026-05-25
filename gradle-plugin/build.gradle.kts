@@ -85,6 +85,7 @@ val publishToFunctionalTestRepository by tasks.registering {
     description = "Publishes all required modules to functional test repository"
     dependsOn(
         ":plugin-jar-annotations:publishMavenPublicationToFunctionalTestRepository",
+        ":plugin-jar-core:publishMavenPublicationToFunctionalTestRepository",
         ":plugin-jar-paper-plugin-loader:publishMavenPublicationToFunctionalTestRepository"
     )
 }

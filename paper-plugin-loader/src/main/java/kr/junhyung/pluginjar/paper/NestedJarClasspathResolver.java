@@ -1,5 +1,7 @@
 package kr.junhyung.pluginjar.paper;
 
+import kr.junhyung.pluginjar.core.NestedLibraryExtractor;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -14,6 +16,6 @@ public class NestedJarClasspathResolver implements ClasspathResolver {
 
     @Override
     public List<Path> resolve() throws IOException {
-        return kr.junhyung.pluginjar.core.LibraryExtractor.extractToTempDirectory(pluginJar);
+        return NestedLibraryExtractor.extract(pluginJar);
     }
 }

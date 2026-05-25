@@ -1,7 +1,7 @@
 package kr.junhyung.pluginjar.gradle.nested
 
 import kr.junhyung.pluginjar.gradle.manifest.PluginRuntimeClasspath
-import kr.junhyung.pluginjar.core.LibraryExtractor
+import kr.junhyung.pluginjar.core.NestedLibraryExtractor
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.ArchiveOperations
@@ -51,7 +51,7 @@ abstract class NestedPluginJar : Jar() {
             entries.map { archiveOperations.zipTree(it.asFile) }
         })
 
-        into(LibraryExtractor.LIBRARIES_DIR) {
+        into(NestedLibraryExtractor.LIBRARIES_DIR) {
             from(externalLibraries)
         }
     }

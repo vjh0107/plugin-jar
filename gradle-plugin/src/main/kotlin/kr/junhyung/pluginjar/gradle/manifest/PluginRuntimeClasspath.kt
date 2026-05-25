@@ -26,8 +26,7 @@ internal class PluginRuntimeClasspath private constructor(configuration: Configu
 
     private fun isPluginJar(id: ComponentIdentifier): Boolean =
         id is ModuleComponentIdentifier &&
-            id.group == PaperPluginManifestPlugin.pluginGroup &&
-            id.module == PaperPluginManifestPlugin.PAPER_RUNTIME_ARTIFACT
+            id.group == PaperPluginManifestPlugin.pluginGroup
 
     companion object {
         private const val EXTENSION_NAME = "pluginRuntimeClasspath"

@@ -1,6 +1,6 @@
 package kr.junhyung.pluginjar.paper;
 
-import org.junit.jupiter.api.AfterEach;
+import kr.junhyung.pluginjar.core.NestedLibraryExtractor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class LibraryExtractorTest {
+class NestedLibraryExtractorTest {
 
     @TempDir
     Path tempDir;
@@ -29,19 +29,12 @@ class LibraryExtractorTest {
         testJarPath = tempDir.resolve("test-plugin.jar");
     }
 
-    @AfterEach
-    void teardown() throws IOException {
-        if (testJarPath != null && Files.exists(testJarPath)) {
-            Files.deleteIfExists(testJarPath);
-        }
-    }
-
     @Test
     @DisplayName("라이브러리 디렉토리가 없으면 빈 리스트를 반환한다")
     void returnsEmptyListWhenNoLibrariesDir() throws Exception {
         createEmptyJar(testJarPath);
 
-        List<Path> extracted = kr.junhyung.pluginjar.core.LibraryExtractor.extractToTempDirectory(testJarPath);
+        List<Path> extracted = NestedLibraryExtractor.extract(testJarPath);
         assertEquals(0, extracted.size());
     }
 
@@ -50,7 +43,7 @@ class LibraryExtractorTest {
     void extractsAllJars() throws Exception {
         createJarWithLibraries(testJarPath, List.of("lib1.jar", "lib2.jar", "lib3.jar"));
 
-        List<Path> paths = kr.junhyung.pluginjar.core.LibraryExtractor.extractToTempDirectory(testJarPath);
+        List<Path> paths = NestedLibraryExtractor.extract(testJarPath);
         assertEquals(3, paths.size());
         for (Path path : paths) {
             assertTrue(Files.exists(path), "extracted file should exist: " + path);
@@ -63,7 +56,7 @@ class LibraryExtractorTest {
     void ignoresNonJarFiles() throws Exception {
         createJarWithMixedFiles(testJarPath);
 
-        List<Path> paths = kr.junhyung.pluginjar.core.LibraryExtractor.extractToTempDirectory(testJarPath);
+        List<Path> paths = NestedLibraryExtractor.extract(testJarPath);
         assertEquals(1, paths.size());
         assertTrue(paths.getFirst().toString().endsWith(".jar"));
     }
@@ -73,7 +66,36 @@ class LibraryExtractorTest {
     void throwsExceptionForInvalidJarPath() {
         Path nonExistentJar = tempDir.resolve("non-existent.jar");
 
-        assertThrows(IOException.class, () -> kr.junhyung.pluginjar.core.LibraryExtractor.extractToTempDirectory(nonExistentJar));
+        assertThrows(IOException.class, () -> NestedLibraryExtractor.extract(nonExistentJar));
+    }
+
+    @Test
+    @DisplayName("두 번째 호출은 캐시에서 반환한다")
+    void secondCallReturnsCached() throws Exception {
+        createJarWithLibraries(testJarPath, List.of("lib1.jar", "lib2.jar"));
+
+        List<Path> first = NestedLibraryExtractor.extract(testJarPath);
+        List<Path> second = NestedLibraryExtractor.extract(testJarPath);
+
+        assertEquals(first, second);
+    }
+
+    @Test
+    @DisplayName("JAR이 변경되면 새로 추출하고 이전 캐시를 정리한다")
+    void reExtractsWhenJarChanges() throws Exception {
+        createJarWithLibraries(testJarPath, List.of("lib1.jar"));
+        NestedLibraryExtractor.extract(testJarPath);
+
+        createJarWithLibraries(testJarPath, List.of("lib1.jar", "lib2.jar"));
+        List<Path> paths = NestedLibraryExtractor.extract(testJarPath);
+
+        assertEquals(2, paths.size());
+
+        Path cacheDir = tempDir.resolve(".pluginjar-cache").resolve(testJarPath.getFileName().toString());
+        try (var entries = Files.list(cacheDir)) {
+            long hashDirs = entries.filter(Files::isDirectory).count();
+            assertEquals(1, hashDirs, "stale cache entry should be cleaned up");
+        }
     }
 
     private void createEmptyJar(Path jarPath) throws IOException {
@@ -86,9 +108,10 @@ class LibraryExtractorTest {
     }
 
     private void createJarWithLibraries(Path jarPath, List<String> libraryNames) throws IOException {
+        Files.deleteIfExists(jarPath);
         URI jarUri = URI.create("jar:" + jarPath.toUri());
         try (FileSystem fs = FileSystems.newFileSystem(jarUri, Map.of("create", "true"))) {
-            Path libDir = fs.getPath(kr.junhyung.pluginjar.core.LibraryExtractor.LIBRARIES_PATH);
+            Path libDir = fs.getPath(NestedLibraryExtractor.LIBRARIES_PATH);
             Files.createDirectories(libDir);
 
             for (String libName : libraryNames) {
@@ -101,7 +124,7 @@ class LibraryExtractorTest {
     private void createJarWithMixedFiles(Path jarPath) throws IOException {
         URI jarUri = URI.create("jar:" + jarPath.toUri());
         try (FileSystem fs = FileSystems.newFileSystem(jarUri, Map.of("create", "true"))) {
-            Path libDir = fs.getPath(kr.junhyung.pluginjar.core.LibraryExtractor.LIBRARIES_PATH);
+            Path libDir = fs.getPath(NestedLibraryExtractor.LIBRARIES_PATH);
             Files.createDirectories(libDir);
 
             Files.write(libDir.resolve("actual-lib.jar"), new byte[]{0x50, 0x4B, 0x03, 0x04});
