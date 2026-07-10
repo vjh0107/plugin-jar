@@ -9,9 +9,13 @@ import javax.inject.Inject
 
 abstract class PluginImageExtension @Inject constructor(layout: ProjectLayout) {
 
+    abstract val pluginName: Property<String>
+
     abstract val targetImage: Property<String>
 
     abstract val tags: SetProperty<String>
+
+    abstract val pushMovableTags: Property<Boolean>
 
     abstract val username: Property<String>
 

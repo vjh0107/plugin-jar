@@ -1,7 +1,6 @@
 package kr.junhyung.pluginjar.gradle.image
 
-import kr.junhyung.pluginjar.gradle.manifest.PluginExtension
-import kr.junhyung.pluginjar.gradle.manifest.PluginRuntimeClasspath
+import kr.junhyung.pluginjar.gradle.RuntimeClasspathView
 import org.gradle.api.Project
 import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.ConfigurableFileCollection
@@ -26,7 +25,7 @@ abstract class PluginImageBootstrap : Jar() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val pluginJarLibraries: ConfigurableFileCollection
+    abstract val bootstrapLibraries: ConfigurableFileCollection
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -35,7 +34,7 @@ abstract class PluginImageBootstrap : Jar() {
     init {
         group = "plugin"
 
-        from(pluginJarLibraries.elements.map { entries ->
+        from(bootstrapLibraries.elements.map { entries ->
             entries.map { archiveOperations.zipTree(it.asFile) }
         })
 
@@ -51,14 +50,14 @@ abstract class PluginImageBootstrap : Jar() {
 
         internal fun register(
             project: Project,
-            extension: PluginExtension,
-            classpath: PluginRuntimeClasspath,
+            extension: PluginImageExtension,
+            artifacts: RuntimeClasspathView,
         ): TaskProvider<PluginImageBootstrap> {
             val mainJarTask = project.tasks.named<Jar>(JavaPlugin.JAR_TASK_NAME)
             return project.tasks.register<PluginImageBootstrap>(TASK_NAME) {
-                archiveBaseName.set(extension.name.orElse(project.name))
+                archiveBaseName.set(extension.pluginName.orElse(project.name))
                 destinationDirectory.set(project.layout.buildDirectory.dir(PLUGIN_DIR_LOCATION))
-                pluginJarLibraries.from(classpath.pluginJarLibraries)
+                bootstrapLibraries.from(artifacts.bootstrapLibraries)
                 mainJar.set(mainJarTask.flatMap { it.archiveFile })
             }
         }

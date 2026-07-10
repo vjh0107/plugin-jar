@@ -3,7 +3,7 @@ package com.example;
 import kr.junhyung.pluginjar.annotations.PluginMarker;
 import org.bukkit.plugin.java.JavaPlugin;
 
-@PluginMarker(name = "TestPaperPlugin")
+@PluginMarker(id = "TestPaperPlugin")
 public class TestPaperPlugin extends JavaPlugin {
 
     @Override

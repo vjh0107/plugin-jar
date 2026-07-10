@@ -15,33 +15,47 @@ gradlePlugin {
     vcsUrl.set(providers.gradleProperty("project.scm.url"))
 
     plugins {
-        register("plugin-jar") {
-            id = "kr.junhyung.plugin-jar"
-            implementationClass = "kr.junhyung.pluginjar.gradle.PluginJarPlugin"
-            displayName = "Plugin Jar"
-            description = "Streamline your Gradle plugin JAR builds for Minecraft plugins."
-            tags = listOf("paper", "minecraft")
-        }
-        register("plugin-jar-manifest") {
-            id = "kr.junhyung.plugin-jar.manifest"
-            implementationClass = "kr.junhyung.pluginjar.gradle.manifest.PaperPluginManifestPlugin"
-            displayName = "plugin-jar (manifest)"
-            description = "Paper plugin manifest (paper-plugin.yml) generation."
-            tags = listOf("paper", "manifest")
-        }
         register("plugin-jar-nested") {
             id = "kr.junhyung.plugin-jar.nested"
             implementationClass = "kr.junhyung.pluginjar.gradle.nested.NestedPluginJarPlugin"
             displayName = "plugin-jar (nested)"
-            description = "Paper nested plugin jar."
-            tags = listOf("paper", "nested-jar")
+            description = "Nested plugin jar bundling runtime libraries."
+            tags = listOf("minecraft", "nested-jar")
         }
         register("plugin-jar-image") {
             id = "kr.junhyung.plugin-jar.image"
             implementationClass = "kr.junhyung.pluginjar.gradle.image.PluginImageBuildPlugin"
             displayName = "plugin-jar (image)"
-            description = "Paper plugin OCI image via jib."
-            tags = listOf("paper", "oci")
+            description = "Plugin OCI image via jib."
+            tags = listOf("minecraft", "oci")
+        }
+        register("plugin-jar-paper") {
+            id = "kr.junhyung.plugin-jar.paper"
+            implementationClass = "kr.junhyung.pluginjar.gradle.paper.PaperPluginJarPlugin"
+            displayName = "plugin-jar (paper)"
+            description = "Streamline your Gradle plugin JAR builds for Paper plugins."
+            tags = listOf("paper", "minecraft")
+        }
+        register("plugin-jar-manifest") {
+            id = "kr.junhyung.plugin-jar.manifest"
+            implementationClass = "kr.junhyung.pluginjar.gradle.paper.PaperPluginManifestPlugin"
+            displayName = "plugin-jar (manifest)"
+            description = "Paper plugin manifest (paper-plugin.yml) generation."
+            tags = listOf("paper", "manifest")
+        }
+        register("plugin-jar-velocity") {
+            id = "kr.junhyung.plugin-jar.velocity"
+            implementationClass = "kr.junhyung.pluginjar.gradle.velocity.VelocityPluginJarPlugin"
+            displayName = "plugin-jar (velocity)"
+            description = "Streamline your Gradle plugin JAR builds for Velocity plugins."
+            tags = listOf("velocity", "minecraft")
+        }
+        register("plugin-jar-velocity-manifest") {
+            id = "kr.junhyung.plugin-jar.velocity.manifest"
+            implementationClass = "kr.junhyung.pluginjar.gradle.velocity.VelocityPluginManifestPlugin"
+            displayName = "plugin-jar (velocity manifest)"
+            description = "Velocity plugin manifest (velocity-plugin.json) generation."
+            tags = listOf("velocity", "manifest")
         }
     }
 }
@@ -53,7 +67,7 @@ testing {
             useJUnitJupiter()
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation(project(":plugin-jar-paper-plugin-loader"))
+                implementation(project(":paper-loader"))
                 implementation(libs.paper.api) {
                     isTransitive = false
                 }
@@ -84,9 +98,10 @@ val publishToFunctionalTestRepository by tasks.registering {
     group = "publishing"
     description = "Publishes all required modules to functional test repository"
     dependsOn(
-        ":plugin-jar-annotations:publishMavenPublicationToFunctionalTestRepository",
-        ":plugin-jar-core:publishMavenPublicationToFunctionalTestRepository",
-        ":plugin-jar-paper-plugin-loader:publishMavenPublicationToFunctionalTestRepository"
+        ":annotations:publishMavenPublicationToFunctionalTestRepository",
+        ":core:publishMavenPublicationToFunctionalTestRepository",
+        ":paper-loader:publishMavenPublicationToFunctionalTestRepository",
+        ":velocity-loader:publishMavenPublicationToFunctionalTestRepository",
     )
 }
 
@@ -98,13 +113,13 @@ tasks.named<Test>("functionalTest") {
 }
 
 dependencies {
-    implementation(project(":plugin-jar-annotations"))
-    compileOnly(project(":plugin-jar-core"))
+    implementation(project(":annotations"))
+    compileOnly(project(":core"))
     implementation(libs.asm)
+    implementation(libs.jib.core)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.dataformat.yaml)
     implementation(libs.jackson.module.kotlin)
-    implementation(libs.jib.core)
 }
 
 tasks.named<Jar>("jar") {

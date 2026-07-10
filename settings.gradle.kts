@@ -5,15 +5,13 @@ pluginManagement {
 }
 includeBuild("build-logic")
 
-fun includeProject(name: String, path: String) {
-    include(name)
-    project(":$name").projectDir = file(path)
-}
+include(":core")
+include(":annotations")
 
-includeProject("plugin-jar-core", "core")
-includeProject("plugin-jar-gradle-plugin", "gradle-plugin")
-includeProject("plugin-jar-annotations", "annotations")
-includeProject("plugin-jar-paper-plugin-loader", "paper-plugin-loader")
+include(":gradle-plugin")
+
+include(":paper-loader")
+include(":velocity-loader")
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {

@@ -10,6 +10,7 @@ import com.google.cloud.tools.jib.api.RegistryImage
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer
 import com.google.cloud.tools.jib.frontend.CredentialRetrieverFactory
+import kr.junhyung.pluginjar.core.ContainerImageLayout
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -67,17 +68,11 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         group = "plugin"
     }
 
-    private companion object {
-        const val PAYLOAD_DIR_SUFFIX = ".d"
-        const val LIBS_SUBDIR = "libs"
-        const val MODULES_SUBDIR = "modules"
-    }
-
     @TaskAction
     fun build() {
         val name = pluginName.get()
         val imageRoot = AbsoluteUnixPath.get("/")
-        val payloadRoot = imageRoot.resolve(name + PAYLOAD_DIR_SUFFIX)
+        val payloadRoot = imageRoot.resolve(name + ContainerImageLayout.PAYLOAD_DIRECTORY_SUFFIX)
 
         val containerBuilder = Jib.fromScratch().setCreationTime(Instant.EPOCH)
         addLibsLayer(containerBuilder, payloadRoot)
@@ -143,11 +138,13 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
     }
 
     private fun addLibsLayer(builder: JibContainerBuilder, payloadRoot: AbsoluteUnixPath) {
-        val libs = libsFiles.asFileTree.files.filter { it.isFile && it.name.endsWith(".jar") }.sortedBy { it.name }
+        val libs = libsFiles.asFileTree.files
+            .filter { it.isFile && it.name.endsWith(ContainerImageLayout.JAR_EXTENSION) }
+            .sortedBy { it.name }
         if (libs.isEmpty()) return
-        val layer = FileEntriesLayer.builder().setName("libs")
+        val layer = FileEntriesLayer.builder().setName(ContainerImageLayout.LIBS_DIRECTORY)
         for (jar in libs) {
-            layer.addEntry(jar.toPath(), payloadRoot.resolve("$LIBS_SUBDIR/${jar.name}"))
+            layer.addEntry(jar.toPath(), payloadRoot.resolve("${ContainerImageLayout.LIBS_DIRECTORY}/${jar.name}"))
         }
         builder.addFileEntriesLayer(layer.build())
     }
@@ -165,11 +162,13 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
     }
 
     private fun addModuleLayers(builder: JibContainerBuilder, payloadRoot: AbsoluteUnixPath) {
-        val modules = moduleFiles.asFileTree.files.filter { it.isFile && it.name.endsWith(".jar") }.sortedBy { it.name }
+        val modules = moduleFiles.asFileTree.files
+            .filter { it.isFile && it.name.endsWith(ContainerImageLayout.JAR_EXTENSION) }
+            .sortedBy { it.name }
         for (jar in modules) {
             val layer = FileEntriesLayer.builder()
                 .setName("module-${jar.nameWithoutExtension}")
-                .addEntry(jar.toPath(), payloadRoot.resolve("$MODULES_SUBDIR/${jar.name}"))
+                .addEntry(jar.toPath(), payloadRoot.resolve("${ContainerImageLayout.MODULES_DIRECTORY}/${jar.name}"))
                 .build()
             builder.addFileEntriesLayer(layer)
         }

@@ -1,6 +1,6 @@
 package kr.junhyung.pluginjar.gradle.nested
 
-import kr.junhyung.pluginjar.gradle.manifest.PluginRuntimeClasspath
+import kr.junhyung.pluginjar.gradle.RuntimeClasspathView
 import kr.junhyung.pluginjar.core.NestedLibraryExtractor
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -34,7 +34,7 @@ abstract class NestedPluginJar : Jar() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val pluginJarLibraries: ConfigurableFileCollection
+    abstract val bootstrapLibraries: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -47,7 +47,7 @@ abstract class NestedPluginJar : Jar() {
 
         from(mainSourceOutput)
         from(projectModuleOutputs)
-        from(pluginJarLibraries.elements.map { entries ->
+        from(bootstrapLibraries.elements.map { entries ->
             entries.map { archiveOperations.zipTree(it.asFile) }
         })
 
@@ -61,18 +61,18 @@ abstract class NestedPluginJar : Jar() {
 
         internal fun register(
             project: Project,
-            classpath: PluginRuntimeClasspath,
+            artifacts: RuntimeClasspathView,
         ): TaskProvider<NestedPluginJar> =
             project.tasks.register<NestedPluginJar>(TASK_NAME) {
                 mainSourceOutput.from(mainSourceOutputOf(project))
-                projectModuleOutputs.from(classpath.projectArtifacts.map { artifacts ->
-                    artifacts.flatMap { artifact ->
+                projectModuleOutputs.from(artifacts.projectArtifacts.map { resolved ->
+                    resolved.flatMap { artifact ->
                         val id = artifact.id.componentIdentifier as ProjectComponentIdentifier
                         mainSourceOutputOrNull(project.rootProject.project(id.projectPath))?.files.orEmpty()
                     }
                 })
-                pluginJarLibraries.from(classpath.pluginJarLibraries)
-                externalLibraries.from(classpath.externalLibraries)
+                bootstrapLibraries.from(artifacts.bootstrapLibraries)
+                externalLibraries.from(artifacts.externalLibraries)
             }
 
         private fun mainSourceOutputOf(project: Project): FileCollection =

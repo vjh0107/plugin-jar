@@ -8,6 +8,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.CLASS)
 public @interface PluginMarker {
-    String name() default "";
-    String apiVersion() default "";
+    String id() default "";
 }

@@ -1,6 +1,6 @@
 plugins {
     java
-    id("kr.junhyung.plugin-jar")
+    id("kr.junhyung.plugin-jar.paper")
 }
 
 group = "com.example"
@@ -21,6 +21,6 @@ paperPlugin {
     author.set("TestAuthor")
 }
 
-paperPluginImage {
+pluginImage {
     targetImage.set("test-paper-plugin:latest")
 }
