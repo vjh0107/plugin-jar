@@ -25,6 +25,16 @@ internal class RuntimeClasspathView private constructor(
         componentFilter { it is ProjectComponentIdentifier }
     }.artifacts.resolvedArtifacts
 
+    val bootstrapProjectArtifacts: Provider<Set<ResolvedArtifactResult>> = bootstrapClasspath.incoming.artifactView {
+        componentFilter { it is ProjectComponentIdentifier }
+    }.artifacts.resolvedArtifacts
+
+    val moduleArtifacts: Provider<Set<ResolvedArtifactResult>> =
+        projectArtifacts.zip(bootstrapProjectArtifacts) { all, bootstrap ->
+            val bootstrapIds = bootstrap.mapTo(HashSet()) { it.id.componentIdentifier }
+            all.filterNotTo(LinkedHashSet()) { it.id.componentIdentifier in bootstrapIds }
+        }
+
     companion object {
         private const val EXTENSION_NAME = "runtimeClasspathView"
 

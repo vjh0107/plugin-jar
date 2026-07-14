@@ -98,7 +98,7 @@ abstract class PluginImageBuildPlugin : Plugin<Project> {
         return project.tasks.register<Sync>(COLLECT_MODULES_TASK) {
             group = "plugin"
             duplicatesStrategy = DuplicatesStrategy.FAIL
-            from(artifacts.projectArtifacts.map { resolved -> resolved.map { it.file } })
+            from(artifacts.moduleArtifacts.map { resolved -> resolved.map { it.file } })
             into(location)
         }
     }
