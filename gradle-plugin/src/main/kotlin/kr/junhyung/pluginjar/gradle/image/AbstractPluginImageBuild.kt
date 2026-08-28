@@ -50,10 +50,6 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
     @get:IgnoreEmptyDirectories
     abstract val libsFiles: ConfigurableFileCollection
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val moduleFiles: ConfigurableFileCollection
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val bootstrapJar: RegularFileProperty
@@ -77,7 +73,6 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         val containerBuilder = Jib.fromScratch().setCreationTime(Instant.EPOCH)
         addLibsLayer(containerBuilder, payloadRoot)
         addBootstrapLayer(containerBuilder, imageRoot, name)
-        addModuleLayers(containerBuilder, payloadRoot)
 
         val containerizer = createContainerizer().apply {
             tags.get().forEach(::withAdditionalTag)
@@ -98,13 +93,11 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         imageExtension: PluginImageExtension,
         bootstrap: TaskProvider<PluginImageBootstrap>,
         libs: TaskProvider<Sync>,
-        modules: TaskProvider<Sync>,
     ) {
         targetImage.set(imageExtension.targetImage)
         tags.convention(imageExtension.tags)
         pluginName.set(bootstrap.flatMap { it.archiveBaseName })
         libsFiles.from(libs)
-        moduleFiles.from(modules)
         bootstrapJar.set(bootstrap.flatMap { it.archiveFile })
         applicationLayersCache.set(imageExtension.applicationLayersCache)
         baseImageLayersCache.set(imageExtension.baseImageLayersCache)
@@ -161,18 +154,6 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
         builder.addFileEntriesLayer(layer)
     }
 
-    private fun addModuleLayers(builder: JibContainerBuilder, payloadRoot: AbsoluteUnixPath) {
-        val modules = moduleFiles.asFileTree.files
-            .filter { it.isFile && it.name.endsWith(ContainerImageLayout.JAR_EXTENSION) }
-            .sortedBy { it.name }
-        for (jar in modules) {
-            val layer = FileEntriesLayer.builder()
-                .setName("module-${jar.nameWithoutExtension}")
-                .addEntry(jar.toPath(), payloadRoot.resolve("${ContainerImageLayout.MODULES_DIRECTORY}/${jar.name}"))
-                .build()
-            builder.addFileEntriesLayer(layer)
-        }
-    }
 
     private fun dispatchLog(event: LogEvent) {
         when (event.level) {

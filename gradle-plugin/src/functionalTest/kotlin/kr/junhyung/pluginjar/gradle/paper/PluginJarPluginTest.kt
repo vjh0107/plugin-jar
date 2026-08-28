@@ -186,9 +186,9 @@ class PluginJarPluginTest {
     }
 
     @Test
-    @DisplayName("image bootstrap jar에 main class가 포함되고 modules에는 main jar가 들어가지 않는다")
-    fun `bootstrap jar bundles main class and modules excludes main jar`() {
-        val result = gradleRunner("pluginImageBootstrap", "pluginImageCollectModules").build()
+    @DisplayName("image bootstrap jar에 main class가 포함된다")
+    fun `bootstrap jar bundles main class`() {
+        val result = gradleRunner("pluginImageBootstrap").build()
 
         assertEquals(TaskOutcome.SUCCESS, result.task(":pluginImageBootstrap")?.outcome)
 
@@ -203,10 +203,6 @@ class PluginJarPluginTest {
         } finally {
             jarFile.close()
         }
-
-        val modulesDir = File(testProjectDir, "build/docker-context/modules")
-        val strayMainJar = File(modulesDir, "test-paper-plugin-1.0.0.jar")
-        assertTrue(!strayMainJar.exists(), "modules should not contain the main jar (it belongs to bootstrap)")
     }
 
     @Test

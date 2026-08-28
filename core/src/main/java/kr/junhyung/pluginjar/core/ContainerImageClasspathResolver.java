@@ -3,7 +3,6 @@ package kr.junhyung.pluginjar.core;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -19,10 +18,7 @@ public class ContainerImageClasspathResolver implements ClasspathResolver {
     @Override
     public List<Path> resolve() throws IOException {
         Path payloadRoot = ContainerImageLayout.payloadDirectory(pluginJar);
-        List<Path> result = new ArrayList<>();
-        result.addAll(listJars(payloadRoot.resolve(ContainerImageLayout.LIBS_DIRECTORY)));
-        result.addAll(listJars(payloadRoot.resolve(ContainerImageLayout.MODULES_DIRECTORY)));
-        return result;
+        return listJars(payloadRoot.resolve(ContainerImageLayout.LIBS_DIRECTORY));
     }
 
     private static List<Path> listJars(Path directory) throws IOException {

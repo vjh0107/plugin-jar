@@ -26,9 +26,8 @@ abstract class PluginImageBuild : AbstractPluginImageBuild() {
             imageExtension: PluginImageExtension,
             bootstrap: TaskProvider<PluginImageBootstrap>,
             libs: TaskProvider<Sync>,
-            modules: TaskProvider<Sync>,
         ): TaskProvider<PluginImageBuild> = project.tasks.register<PluginImageBuild>(TASK_NAME) {
-            configureFrom(imageExtension, bootstrap, libs, modules)
+            configureFrom(imageExtension, bootstrap, libs)
             username.set(imageExtension.username)
             password.set(imageExtension.password)
         }

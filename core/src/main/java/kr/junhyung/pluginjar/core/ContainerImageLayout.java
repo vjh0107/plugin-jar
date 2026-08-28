@@ -7,7 +7,6 @@ public final class ContainerImageLayout {
     public static final String JAR_EXTENSION = ".jar";
     public static final String PAYLOAD_DIRECTORY_SUFFIX = ".d";
     public static final String LIBS_DIRECTORY = "libs";
-    public static final String MODULES_DIRECTORY = "modules";
 
     private ContainerImageLayout() {
     }

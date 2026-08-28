@@ -26,13 +26,12 @@ abstract class PluginImageTar : AbstractPluginImageBuild() {
             imageExtension: PluginImageExtension,
             bootstrap: TaskProvider<PluginImageBootstrap>,
             libs: TaskProvider<Sync>,
-            modules: TaskProvider<Sync>,
         ): TaskProvider<PluginImageTar> {
             val defaultTarFile = project.layout.buildDirectory.file(
                 bootstrap.flatMap { it.archiveBaseName.map { name -> TAR_PATH_TEMPLATE.format(name) } }
             )
             return project.tasks.register<PluginImageTar>(TASK_NAME) {
-                configureFrom(imageExtension, bootstrap, libs, modules)
+                configureFrom(imageExtension, bootstrap, libs)
                 tarOutputFile.set(imageExtension.tarOutputFile.orElse(defaultTarFile))
             }
         }

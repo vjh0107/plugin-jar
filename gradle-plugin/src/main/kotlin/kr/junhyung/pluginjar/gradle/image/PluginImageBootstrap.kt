@@ -58,7 +58,7 @@ abstract class PluginImageBootstrap : Jar() {
                 archiveBaseName.set(extension.pluginName.orElse(project.name))
                 destinationDirectory.set(project.layout.buildDirectory.dir(PLUGIN_DIR_LOCATION))
                 bootstrapLibraries.from(artifacts.bootstrapLibraries)
-                bootstrapLibraries.from(artifacts.bootstrapProjectArtifacts.map { resolved -> resolved.map { it.file } })
+                bootstrapLibraries.from(artifacts.projectArtifacts.map { resolved -> resolved.map { it.file } })
                 mainJar.set(mainJarTask.flatMap { it.archiveFile })
             }
         }

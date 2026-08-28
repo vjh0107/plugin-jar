@@ -17,9 +17,7 @@ abstract class PluginImageBuildPlugin : Plugin<Project> {
 
     companion object {
         private const val LIBS_LOCATION = "docker-context/libs"
-        private const val MODULES_LOCATION = "docker-context/modules"
         private const val COLLECT_LIBS_TASK = "pluginImageCollectLibs"
-        private const val COLLECT_MODULES_TASK = "pluginImageCollectModules"
 
         private const val SNAPSHOT_SUFFIX = "-SNAPSHOT"
         private const val SNAPSHOT_TAG = "snapshot"
@@ -67,11 +65,10 @@ abstract class PluginImageBuildPlugin : Plugin<Project> {
             val artifacts = RuntimeClasspathView.of(project)
             val bootstrap = PluginImageBootstrap.register(project, imageExtension, artifacts)
             val collectLibs = registerCollectLibs(project, artifacts)
-            val collectModules = registerCollectModules(project, artifacts)
 
-            val build = PluginImageBuild.register(project, imageExtension, bootstrap, collectLibs, collectModules)
-            val buildLocal = PluginImageBuildLocal.register(project, imageExtension, bootstrap, collectLibs, collectModules)
-            val tar = PluginImageTar.register(project, imageExtension, bootstrap, collectLibs, collectModules)
+            val build = PluginImageBuild.register(project, imageExtension, bootstrap, collectLibs)
+            val buildLocal = PluginImageBuildLocal.register(project, imageExtension, bootstrap, collectLibs)
+            val tar = PluginImageTar.register(project, imageExtension, bootstrap, collectLibs)
             buildLocal.configure { mustRunAfter(build) }
             tar.configure { mustRunAfter(build, buildLocal) }
         }
@@ -90,16 +87,4 @@ abstract class PluginImageBuildPlugin : Plugin<Project> {
         }
     }
 
-    private fun registerCollectModules(
-        project: Project,
-        artifacts: RuntimeClasspathView,
-    ): TaskProvider<Sync> {
-        val location = project.layout.buildDirectory.dir(MODULES_LOCATION)
-        return project.tasks.register<Sync>(COLLECT_MODULES_TASK) {
-            group = "plugin"
-            duplicatesStrategy = DuplicatesStrategy.FAIL
-            from(artifacts.moduleArtifacts.map { resolved -> resolved.map { it.file } })
-            into(location)
-        }
-    }
 }

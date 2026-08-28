@@ -19,9 +19,8 @@ abstract class PluginImageBuildLocal : AbstractPluginImageBuild() {
             imageExtension: PluginImageExtension,
             bootstrap: TaskProvider<PluginImageBootstrap>,
             libs: TaskProvider<Sync>,
-            modules: TaskProvider<Sync>,
         ): TaskProvider<PluginImageBuildLocal> = project.tasks.register<PluginImageBuildLocal>(TASK_NAME) {
-            configureFrom(imageExtension, bootstrap, libs, modules)
+            configureFrom(imageExtension, bootstrap, libs)
         }
     }
 
