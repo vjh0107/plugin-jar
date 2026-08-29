@@ -36,6 +36,7 @@ import java.util.Optional
 abstract class AbstractPluginImageBuild : DefaultTask() {
 
     @get:Input
+    @get:org.gradle.api.tasks.Optional
     abstract val targetImage: Property<String>
 
     @get:Input
@@ -87,7 +88,13 @@ abstract class AbstractPluginImageBuild : DefaultTask() {
 
     protected abstract fun createContainerizer(): Containerizer
 
-    protected fun parseTargetImage(): ImageReference = ImageReference.parse(targetImage.get())
+    protected fun parseTargetImage(): ImageReference {
+        val target = targetImage.orNull
+            ?: throw IllegalStateException(
+                "pluginImage.targetImage must be set to run '$name'"
+            )
+        return ImageReference.parse(target)
+    }
 
     protected fun configureFrom(
         imageExtension: PluginImageExtension,

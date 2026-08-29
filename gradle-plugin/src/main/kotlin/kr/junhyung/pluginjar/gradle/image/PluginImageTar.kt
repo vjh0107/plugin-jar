@@ -1,6 +1,7 @@
 package kr.junhyung.pluginjar.gradle.image
 
 import com.google.cloud.tools.jib.api.Containerizer
+import com.google.cloud.tools.jib.api.ImageReference
 import com.google.cloud.tools.jib.api.TarImage
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
@@ -39,6 +40,7 @@ abstract class PluginImageTar : AbstractPluginImageBuild() {
 
     override fun createContainerizer(): Containerizer {
         val tarPath = tarOutputFile.get().asFile.toPath()
-        return Containerizer.to(TarImage.at(tarPath).named(parseTargetImage()))
+        val name = targetImage.map(ImageReference::parse).getOrElse(ImageReference.of(null, pluginName.get(), null))
+        return Containerizer.to(TarImage.at(tarPath).named(name))
     }
 }
